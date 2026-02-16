@@ -6,11 +6,11 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from twilio_adapter.builder import (
+from adapters.twilio.builder import (
     TwilioRecordingData,
-    VconBuilder,
-    MIME_TYPES,
+    TwilioVconBuilder as VconBuilder,
 )
+from core.base_builder import MIME_TYPES
 
 
 # =============================================================================
@@ -383,7 +383,7 @@ class TestVconBuilderOriginator:
         assert vcon.dialog[0]["originator"] == 0
 
     def test_originator_outbound_api(self, builder_no_download):
-        """outbound-api direction sets originator to party 1 (not exact match)."""
+        """outbound-api direction sets originator to party 0 (we initiated)."""
         data = TwilioRecordingData({
             "RecordingSid": "RE123",
             "From": "+15551234567",
@@ -392,8 +392,8 @@ class TestVconBuilderOriginator:
         })
         vcon = builder_no_download.build(data)
 
-        # outbound-api is not exactly "outbound", so falls to party 1
-        assert vcon.dialog[0]["originator"] == 1
+        # outbound-api means we initiated the call via API, so originator is party 0
+        assert vcon.dialog[0]["originator"] == 0
 
     def test_originator_missing_direction(self, builder_no_download):
         """Missing direction defaults to party 1."""

@@ -8,8 +8,8 @@ from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-from twilio_adapter.config import Config
-from twilio_adapter.webhook import create_app
+from adapters.twilio.config import TwilioConfig as Config
+from adapters.twilio.webhook import create_app
 
 
 def unique_recording_sid(prefix: str = "RE_TEST") -> str:
@@ -143,7 +143,7 @@ class TestRecordingWebhookStatusFiltering:
 
         assert response.status_code == 200
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_processes_completed_status(self, mock_poster_class, mock_config):
         """Processes recordings with completed status."""
         mock_poster = MagicMock()
@@ -175,7 +175,7 @@ class TestRecordingWebhookStatusFiltering:
 class TestRecordingWebhookDuplicatePrevention:
     """Tests for duplicate recording prevention."""
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_skips_already_processed(self, mock_poster_class, mock_config):
         """Skips already processed recordings."""
         mock_poster = MagicMock()
@@ -215,7 +215,7 @@ class TestRecordingWebhookDuplicatePrevention:
 
     def test_returns_ok_for_duplicate(self, test_client):
         """Returns OK for duplicate requests."""
-        with patch("twilio_adapter.webhook.HttpPoster") as mock_poster_class:
+        with patch("adapters.twilio.webhook.HttpPoster") as mock_poster_class:
             mock_poster = MagicMock()
             mock_poster.post.return_value = True
             mock_poster_class.return_value = mock_poster
@@ -253,7 +253,7 @@ class TestRecordingWebhookDuplicatePrevention:
 class TestRecordingWebhookFullProcessing:
     """Tests for full recording processing flow."""
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_creates_vcon_from_webhook_data(self, mock_poster_class, mock_config):
         """Creates vCon from webhook data."""
         mock_poster = MagicMock()
@@ -288,7 +288,7 @@ class TestRecordingWebhookFullProcessing:
         assert posted_vcon.parties[0]["tel"] == "+15551234567"
         assert posted_vcon.parties[1]["tel"] == "+15559876543"
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_tracks_success_status(self, mock_poster_class, mock_config):
         """Tracks success status after posting."""
         mock_poster = MagicMock()
@@ -315,7 +315,7 @@ class TestRecordingWebhookFullProcessing:
 
         assert data["status"] == "success"
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_tracks_failure_status(self, mock_poster_class, mock_config):
         """Tracks failure status when posting fails."""
         mock_poster = MagicMock()
@@ -350,7 +350,7 @@ class TestRecordingWebhookFullProcessing:
 class TestRecordingWebhookAllParameters:
     """Tests for handling all webhook parameters."""
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_handles_all_parameters(self, mock_poster_class, mock_config):
         """Handles all Twilio webhook parameters."""
         mock_poster = MagicMock()
@@ -394,7 +394,7 @@ class TestRecordingWebhookAllParameters:
 
         assert response.status_code == 200
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_handles_minimal_parameters(self, mock_poster_class, mock_config):
         """Handles minimal required parameters."""
         mock_poster = MagicMock()
@@ -437,7 +437,7 @@ class TestStatusEndpoint:
         assert "detail" in data
         assert "not found" in data["detail"].lower()
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_returns_recording_sid(self, mock_poster_class, mock_config):
         """Returns recording SID in response."""
         mock_poster = MagicMock()
@@ -464,7 +464,7 @@ class TestStatusEndpoint:
 
         assert data["recording_sid"] == "RE_STATUS_SID"
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_returns_vcon_uuid(self, mock_poster_class, mock_config):
         """Returns vCon UUID in response."""
         mock_poster = MagicMock()
@@ -492,7 +492,7 @@ class TestStatusEndpoint:
         assert "vcon_uuid" in data
         assert data["vcon_uuid"] is not None
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_returns_processing_status(self, mock_poster_class, mock_config):
         """Returns processing status in response."""
         mock_poster = MagicMock()
@@ -645,7 +645,7 @@ class TestWebhookErrorHandling:
             assert response.status_code == 200
             assert response.text == "OK"
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_returns_ok_even_on_post_failure(self, mock_poster_class, mock_config):
         """Returns OK even when conserver post fails."""
         mock_poster = MagicMock()
@@ -678,7 +678,7 @@ class TestWebhookErrorHandling:
 class TestWebhookIntegration:
     """Integration-style tests for the webhook."""
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_full_recording_flow(self, mock_poster_class, mock_config):
         """Test full recording processing flow."""
         mock_poster = MagicMock()
@@ -732,7 +732,7 @@ class TestWebhookIntegration:
         assert response.status_code == 200
         mock_poster.post.assert_not_called()
 
-    @patch("twilio_adapter.webhook.HttpPoster")
+    @patch("adapters.twilio.webhook.HttpPoster")
     def test_multiple_recordings(self, mock_poster_class, mock_config):
         """Test processing multiple different recordings."""
         mock_poster = MagicMock()

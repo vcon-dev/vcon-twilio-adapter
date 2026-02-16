@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from twilio_adapter.config import Config
+from adapters.twilio.config import TwilioConfig as Config
 
 
 class TestConfigRequired:

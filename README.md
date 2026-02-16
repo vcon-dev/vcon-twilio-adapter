@@ -1,15 +1,35 @@
-# vCon Twilio Adapter
+# vCon Telephony Adapters
 
-A webhook-based adapter that converts Twilio call recordings into vCon (Virtual Conversation) format and posts them to a vCon conserver.
+A monorepo of webhook-based adapters that convert telephony platform recordings into vCon (Virtual Conversation) format and post them to a vCon conserver.
 
 ## Overview
 
-This adapter:
-- Receives Twilio recording status webhooks when call recordings are completed
-- Downloads the recording audio from Twilio (optional)
-- Creates a vCon containing the recording, participant information, and metadata
-- Posts the vCon to a conserver endpoint
-- Tracks processed recordings to prevent duplicates
+This project provides a unified framework for converting call recordings from various telephony platforms into the standardized vCon format:
+
+- **Twilio** - Convert Twilio call recordings via webhooks (currently supported)
+- **FreeSWITCH** - Coming soon
+- **Asterisk** - Coming soon
+- **Telnyx** - Coming soon
+- **Bandwidth** - Coming soon
+
+## Architecture
+
+```
+vcon-telephony-adapters/
+├── core/                    # Shared core modules
+│   ├── base_builder.py      # Abstract vCon builder
+│   ├── base_config.py       # Base configuration
+│   ├── poster.py            # HTTP posting to conserver
+│   └── tracker.py           # State tracking for duplicates
+├── adapters/                # Platform-specific adapters
+│   └── twilio/              # Twilio adapter
+│       ├── builder.py       # Twilio-specific vCon builder
+│       ├── config.py        # Twilio configuration
+│       └── webhook.py       # FastAPI webhook endpoints
+├── twilio_adapter/          # Backwards compatibility layer
+├── tests/                   # Test suite
+└── main.py                  # CLI entry point
+```
 
 ## Requirements
 
@@ -24,12 +44,6 @@ First, install the vcon library:
 
 ```bash
 pip install git+https://github.com/vcon-dev/vcon-lib.git
-```
-
-Or if you have a local copy:
-
-```bash
-pip install /path/to/vcon-lib
 ```
 
 ### Using pip
@@ -89,14 +103,17 @@ RECORDING_FORMAT=wav
 
 ## Usage
 
-### Running the server
+### Running the Twilio adapter
 
 ```bash
 # Using the entry point
+vcon-adapter twilio
+
+# Or with backwards-compatible command
 vcon-twilio-adapter
 
 # Or directly with Python
-python main.py
+python main.py twilio
 ```
 
 The server will start and listen for Twilio webhooks on `/webhook/recording`.
@@ -123,22 +140,6 @@ When recording calls with TwiML, add the `recordingStatusCallback` attribute:
         recordingStatusCallbackEvent="completed"
     />
 </Response>
-```
-
-Or when using the REST API to create calls:
-
-```python
-from twilio.rest import Client
-
-client = Client(account_sid, auth_token)
-call = client.calls.create(
-    to="+1234567890",
-    from_="+0987654321",
-    url="https://your-twiml-url.com/voice",
-    record=True,
-    recording_status_callback="https://your-domain.com/webhook/recording",
-    recording_status_callback_event=["completed"]
-)
 ```
 
 ## API Endpoints
@@ -171,13 +172,6 @@ Get the processing status for a specific recording.
     "recording_sid": "RExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "vcon_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "status": "success"
-}
-```
-
-**Response** (404 - not found):
-```json
-{
-    "detail": "Recording RExxxxxxxx not found"
 }
 ```
 
@@ -240,7 +234,7 @@ pytest tests/test_builder.py
 pytest -v
 ```
 
-The test suite includes 247 tests with 98% code coverage:
+The test suite includes 247 tests with high code coverage:
 - `test_config.py` - Configuration management tests
 - `test_builder.py` - vCon building tests
 - `test_tracker.py` - State tracking tests
@@ -257,20 +251,30 @@ ruff check .
 ### Type checking
 
 ```bash
-mypy twilio_adapter
+mypy core adapters
 ```
 
-## Architecture
+## Adding New Adapters
 
-```
-twilio_adapter/
-├── __init__.py
-├── config.py      # Configuration management
-├── builder.py     # vCon construction from Twilio data
-├── poster.py      # HTTP posting to conserver
-├── tracker.py     # State tracking for duplicate prevention
-└── webhook.py     # FastAPI webhook endpoints
-```
+To add support for a new telephony platform:
+
+1. Create a new directory in `adapters/`:
+   ```
+   adapters/
+   └── yourplatform/
+       ├── __init__.py
+       ├── config.py      # Extend BaseConfig
+       ├── builder.py     # Extend BaseVconBuilder
+       └── webhook.py     # FastAPI endpoints
+   ```
+
+2. Implement the platform-specific recording data class by extending `BaseRecordingData`
+
+3. Implement the builder by extending `BaseVconBuilder` and implementing `_download_recording()`
+
+4. Create the webhook endpoints in a `create_app()` function
+
+5. Register the adapter in `main.py`
 
 ## Deployment
 
@@ -287,7 +291,7 @@ RUN pip install git+https://github.com/vcon-dev/vcon-lib.git
 RUN pip install -e .
 
 EXPOSE 8080
-CMD ["vcon-twilio-adapter"]
+CMD ["vcon-adapter", "twilio"]
 ```
 
 ### Docker Compose

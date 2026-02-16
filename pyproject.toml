@@ -3,16 +3,16 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vcon-twilio-adapter"
-version = "0.1.0"
-description = "Twilio recording to vCon adapter - receives Twilio webhooks and creates vCons"
+name = "vcon-telephony-adapters"
+version = "0.2.0"
+description = "Telephony adapters for converting recordings to vCon format - supports Twilio and more"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
 authors = [
     {name = "vCon Community"}
 ]
-keywords = ["vcon", "twilio", "adapter", "conserver", "telephony", "recordings"]
+keywords = ["vcon", "twilio", "adapter", "conserver", "telephony", "recordings", "freeswitch", "asterisk"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -45,20 +45,22 @@ dev = [
     "mypy>=1.0.0",
 ]
 all = [
-    "vcon-twilio-adapter[dev]",
+    "vcon-telephony-adapters[dev]",
 ]
 
 [project.scripts]
+vcon-adapter = "main:main"
+# Keep backwards compatibility
 vcon-twilio-adapter = "main:main"
 
 [project.urls]
-Homepage = "https://github.com/vcon-dev/vcon-twilio-adapter"
-Repository = "https://github.com/vcon-dev/vcon-twilio-adapter"
-Issues = "https://github.com/vcon-dev/vcon-twilio-adapter/issues"
+Homepage = "https://github.com/vcon-dev/vcon-telephony-adapters"
+Repository = "https://github.com/vcon-dev/vcon-telephony-adapters"
+Issues = "https://github.com/vcon-dev/vcon-telephony-adapters/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["twilio_adapter*"]
+include = ["core*", "adapters*", "twilio_adapter*"]
 
 [tool.black]
 line-length = 100
@@ -81,5 +83,5 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=twilio_adapter --cov-report=term-missing"
+addopts = "-v --cov=core --cov=adapters --cov=twilio_adapter --cov-report=term-missing"
 asyncio_mode = "auto"

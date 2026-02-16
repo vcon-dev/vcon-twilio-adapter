@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for Twilio adapter tests."""
+"""Shared pytest fixtures for telephony adapter tests."""
 
 import json
 import os
@@ -10,11 +10,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from twilio_adapter.config import Config
-from twilio_adapter.builder import TwilioRecordingData, VconBuilder
-from twilio_adapter.poster import HttpPoster
-from twilio_adapter.tracker import StateTracker
-from twilio_adapter.webhook import create_app
+# Import from new structure (core + adapters)
+from core.poster import HttpPoster
+from core.tracker import StateTracker
+from adapters.twilio.config import TwilioConfig
+from adapters.twilio.builder import TwilioRecordingData, TwilioVconBuilder
+from adapters.twilio.webhook import create_app
+
+# Backwards compatibility aliases
+Config = TwilioConfig
+VconBuilder = TwilioVconBuilder
 
 
 # =============================================================================
@@ -70,13 +75,13 @@ def full_env(clean_env):
 @pytest.fixture
 def minimal_config(minimal_env):
     """Config with minimal settings."""
-    return Config()
+    return TwilioConfig()
 
 
 @pytest.fixture
 def full_config(full_env):
     """Config with all settings."""
-    return Config()
+    return TwilioConfig()
 
 
 # =============================================================================
@@ -192,21 +197,21 @@ def full_recording_data(full_webhook_data) -> TwilioRecordingData:
 # =============================================================================
 
 @pytest.fixture
-def builder_no_download() -> VconBuilder:
+def builder_no_download() -> TwilioVconBuilder:
     """VconBuilder that doesn't download recordings."""
-    return VconBuilder(download_recordings=False)
+    return TwilioVconBuilder(download_recordings=False)
 
 
 @pytest.fixture
-def builder_mp3() -> VconBuilder:
+def builder_mp3() -> TwilioVconBuilder:
     """VconBuilder configured for MP3 format."""
-    return VconBuilder(download_recordings=False, recording_format="mp3")
+    return TwilioVconBuilder(download_recordings=False, recording_format="mp3")
 
 
 @pytest.fixture
-def builder_with_auth() -> VconBuilder:
+def builder_with_auth() -> TwilioVconBuilder:
     """VconBuilder with Twilio auth configured."""
-    return VconBuilder(
+    return TwilioVconBuilder(
         download_recordings=True,
         recording_format="wav",
         twilio_auth=("AC123", "auth_token")
@@ -286,7 +291,7 @@ def preloaded_tracker(temp_state_file) -> StateTracker:
 def mock_config(minimal_env):
     """Config for webhook testing."""
     minimal_env.setenv("DOWNLOAD_RECORDINGS", "false")
-    return Config()
+    return TwilioConfig()
 
 
 @pytest.fixture

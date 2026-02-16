@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 from vcon import Vcon
 
-from twilio_adapter.poster import HttpPoster
+from core.poster import HttpPoster
 
 
 class TestHttpPosterInit:
@@ -50,7 +50,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 200 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -64,7 +64,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 201 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 201
             mock_post.return_value = mock_response
@@ -77,7 +77,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 204 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 204
             mock_post.return_value = mock_response
@@ -90,7 +90,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 400 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 400
             mock_response.text = "Bad Request"
@@ -104,7 +104,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 401 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 401
             mock_response.text = "Unauthorized"
@@ -118,7 +118,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 500 status."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
@@ -132,7 +132,7 @@ class TestHttpPosterPost:
         """Network exception returns False."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_post.side_effect = Exception("Connection refused")
 
             result = basic_poster.post(vcon)
@@ -143,7 +143,7 @@ class TestHttpPosterPost:
         """Timeout exception returns False."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             from requests.exceptions import Timeout
             mock_post.side_effect = Timeout("Request timed out")
 
@@ -159,7 +159,7 @@ class TestHttpPosterRequestFormat:
         """POST goes to the configured URL."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -173,7 +173,7 @@ class TestHttpPosterRequestFormat:
         """POST includes configured headers."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -190,7 +190,7 @@ class TestHttpPosterRequestFormat:
         """POST body contains vCon JSON."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -208,7 +208,7 @@ class TestHttpPosterRequestFormat:
         """POST includes 30 second timeout."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -226,7 +226,7 @@ class TestHttpPosterIngressLists:
         """No ingress lists means no query params."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -245,7 +245,7 @@ class TestHttpPosterIngressLists:
         )
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -259,7 +259,7 @@ class TestHttpPosterIngressLists:
         """Multiple ingress lists are joined with comma."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -280,7 +280,7 @@ class TestHttpPosterStatusCodes:
         """2xx status codes return True."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_post.return_value = mock_response
@@ -294,7 +294,7 @@ class TestHttpPosterStatusCodes:
         """3xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Redirect"
@@ -309,7 +309,7 @@ class TestHttpPosterStatusCodes:
         """4xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Client Error"
@@ -324,7 +324,7 @@ class TestHttpPosterStatusCodes:
         """5xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Server Error"
@@ -342,7 +342,7 @@ class TestHttpPosterErrorHandling:
         """Handles connection errors gracefully."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             from requests.exceptions import ConnectionError
             mock_post.side_effect = ConnectionError("Connection refused")
 
@@ -354,7 +354,7 @@ class TestHttpPosterErrorHandling:
         """Handles SSL errors gracefully."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             from requests.exceptions import SSLError
             mock_post.side_effect = SSLError("SSL certificate error")
 
@@ -366,7 +366,7 @@ class TestHttpPosterErrorHandling:
         """Handles long error response text (truncated in logs)."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 400
             mock_response.text = "x" * 1000  # Very long error message
@@ -385,7 +385,7 @@ class TestHttpPosterVconSerialization:
         """vCon.to_json() is called for serialization."""
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -402,7 +402,7 @@ class TestHttpPosterVconSerialization:
         import json
         vcon = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -423,7 +423,7 @@ class TestHttpPosterMultiplePosts:
         """Multiple successful posts all return True."""
         vcons = [Vcon.build_new() for _ in range(5)]
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -437,7 +437,7 @@ class TestHttpPosterMultiplePosts:
         """Mixed success and failure posts return correct results."""
         vcons = [Vcon.build_new() for _ in range(3)]
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_post.side_effect = [
                 MagicMock(status_code=200),
                 MagicMock(status_code=500, text="Error"),
@@ -453,7 +453,7 @@ class TestHttpPosterMultiplePosts:
         vcon1 = Vcon.build_new()
         vcon2 = Vcon.build_new()
 
-        with patch('twilio_adapter.poster.requests.post') as mock_post:
+        with patch('core.poster.requests.post') as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from twilio_adapter.tracker import StateTracker
+from core.tracker import StateTracker
 
 
 class TestStateTrackerInit:
@@ -149,8 +149,8 @@ class TestStateTrackerMarkProcessed:
         with open(temp_state_file, 'r') as f:
             data = json.load(f)
 
-        assert data["RE123"]["from"] == "+15551234567"
-        assert data["RE123"]["to"] == "+15559876543"
+        assert data["RE123"]["from_number"] == "+15551234567"
+        assert data["RE123"]["to_number"] == "+15559876543"
 
 
 class TestStateTrackerGetVconUuid:
@@ -349,8 +349,8 @@ class TestStateTrackerStateFileFormat:
         assert entry["vcon_uuid"] == "vcon-abc-123-def-456"
         assert entry["status"] == "success"
         assert entry["call_sid"] == "CA789"
-        assert entry["from"] == "+15551234567"
-        assert entry["to"] == "+15559876543"
+        assert entry["from_number"] == "+15551234567"
+        assert entry["to_number"] == "+15559876543"
         assert "timestamp" in entry
 
     def test_minimal_entry_format(self, tracker, temp_state_file):
