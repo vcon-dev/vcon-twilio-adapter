@@ -1,7 +1,7 @@
 # vCon Telephony Adapters
 
 [![PyPI version](https://badge.fury.io/py/vcon-telephony-adapters.svg)](https://pypi.org/project/vcon-telephony-adapters/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A monorepo of webhook-based adapters that convert telephony platform recordings into vCon (Virtual Conversation) format and post them to a vCon conserver.
@@ -38,7 +38,7 @@ vcon-telephony-adapters/
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.12+
 - [vcon-lib](https://github.com/vcon-dev/vcon-lib) - The vCon library for creating vCon objects
 
 ## Installation

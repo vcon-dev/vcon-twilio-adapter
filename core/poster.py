@@ -11,9 +11,7 @@ logger = logging.getLogger(__name__)
 class HttpPoster:
     """Posts vCons to HTTP conserver endpoint."""
 
-    def __init__(
-        self, url: str, headers: dict[str, str], ingress_lists: list[str] | None = None
-    ):
+    def __init__(self, url: str, headers: dict[str, str], ingress_lists: list[str] | None = None):
         """Initialize HTTP poster.
 
         Args:
