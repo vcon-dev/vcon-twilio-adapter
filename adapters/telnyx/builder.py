@@ -2,12 +2,11 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
 from core.base_builder import BaseRecordingData, BaseVconBuilder
-
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ class TelnyxRecordingData(BaseRecordingData):
     }
     """
 
-    def __init__(self, event_data: Dict[str, Any]):
+    def __init__(self, event_data: dict[str, Any]):
         """Initialize from Telnyx webhook event data.
 
         Args:
@@ -66,10 +65,7 @@ class TelnyxRecordingData(BaseRecordingData):
     @property
     def recording_id(self) -> str:
         """Telnyx recording ID."""
-        return self._payload.get(
-            "recording_id",
-            self._payload.get("call_control_id", "")
-        )
+        return self._payload.get("recording_id", self._payload.get("call_control_id", ""))
 
     @property
     def call_session_id(self) -> str:
@@ -105,12 +101,12 @@ class TelnyxRecordingData(BaseRecordingData):
         return urls.get("wav", urls.get("mp3", ""))
 
     @property
-    def recording_urls(self) -> Dict[str, str]:
+    def recording_urls(self) -> dict[str, str]:
         """All available recording URLs by format."""
         return self._payload.get("recording_urls", {})
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Recording duration in seconds."""
         duration_millis = self._payload.get("duration_millis")
         if duration_millis is not None:
@@ -141,7 +137,7 @@ class TelnyxRecordingData(BaseRecordingData):
         return datetime.now(timezone.utc)
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """Telnyx-specific metadata tags."""
         tags = {
             "telnyx_recording_id": self.recording_id,
@@ -171,7 +167,7 @@ class TelnyxVconBuilder(BaseVconBuilder):
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ):
         """Initialize Telnyx vCon builder.
 
@@ -183,10 +179,7 @@ class TelnyxVconBuilder(BaseVconBuilder):
         super().__init__(download_recordings, recording_format)
         self.api_key = api_key
 
-    def _download_recording(
-        self,
-        recording_data: BaseRecordingData
-    ) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download recording from Telnyx.
 
         Args:
@@ -215,16 +208,10 @@ class TelnyxVconBuilder(BaseVconBuilder):
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
-            response = requests.get(
-                recording_url,
-                headers=headers,
-                timeout=60
-            )
+            response = requests.get(recording_url, headers=headers, timeout=60)
             response.raise_for_status()
             return response.content
 
         except requests.RequestException as e:
-            logger.error(
-                f"Failed to download Telnyx recording {telnyx_data.recording_id}: {e}"
-            )
+            logger.error(f"Failed to download Telnyx recording {telnyx_data.recording_id}: {e}")
             return None

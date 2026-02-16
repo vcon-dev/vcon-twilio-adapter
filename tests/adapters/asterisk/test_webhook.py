@@ -1,11 +1,10 @@
 """Tests for Asterisk webhook endpoints."""
 
-import json
-import hashlib
-import hmac
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
 from adapters.asterisk.config import AsteriskConfig
 from adapters.asterisk.webhook import create_app
 
@@ -45,8 +44,10 @@ class TestAsteriskWebhook:
 
     def test_recording_event_success(self, config, sample_recording_event):
         """Test successful recording event processing."""
-        with patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -70,8 +71,10 @@ class TestAsteriskWebhook:
 
     def test_recording_event_duplicate(self, config, sample_recording_event):
         """Test duplicate recording event handling."""
-        with patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -126,8 +129,10 @@ class TestAsteriskWebhook:
 
     def test_get_recording_status(self, config, sample_recording_event):
         """Test getting recording status."""
-        with patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.asterisk.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.asterisk.webhook.AsteriskVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()

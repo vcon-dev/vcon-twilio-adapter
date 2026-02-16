@@ -1,6 +1,6 @@
 """Comprehensive tests for HTTP poster module."""
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from vcon import Vcon
@@ -14,8 +14,7 @@ class TestHttpPosterInit:
     def test_basic_init(self):
         """Basic initialization with required args."""
         poster = HttpPoster(
-            url="https://example.com/vcons",
-            headers={"Content-Type": "application/json"}
+            url="https://example.com/vcons", headers={"Content-Type": "application/json"}
         )
 
         assert poster.url == "https://example.com/vcons"
@@ -25,20 +24,14 @@ class TestHttpPosterInit:
     def test_init_with_ingress_lists(self):
         """Initialization with ingress lists."""
         poster = HttpPoster(
-            url="https://example.com/vcons",
-            headers={},
-            ingress_lists=["list1", "list2"]
+            url="https://example.com/vcons", headers={}, ingress_lists=["list1", "list2"]
         )
 
         assert poster.ingress_lists == ["list1", "list2"]
 
     def test_init_with_none_ingress_lists(self):
         """None ingress_lists becomes empty list."""
-        poster = HttpPoster(
-            url="https://example.com/vcons",
-            headers={},
-            ingress_lists=None
-        )
+        poster = HttpPoster(url="https://example.com/vcons", headers={}, ingress_lists=None)
 
         assert poster.ingress_lists == []
 
@@ -50,7 +43,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 200 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -64,7 +57,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 201 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 201
             mock_post.return_value = mock_response
@@ -77,7 +70,7 @@ class TestHttpPosterPost:
         """Successful POST returns True for 204 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 204
             mock_post.return_value = mock_response
@@ -90,7 +83,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 400 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 400
             mock_response.text = "Bad Request"
@@ -104,7 +97,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 401 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 401
             mock_response.text = "Unauthorized"
@@ -118,7 +111,7 @@ class TestHttpPosterPost:
         """Failed POST returns False for 500 status."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
@@ -132,7 +125,7 @@ class TestHttpPosterPost:
         """Network exception returns False."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_post.side_effect = Exception("Connection refused")
 
             result = basic_poster.post(vcon)
@@ -143,8 +136,9 @@ class TestHttpPosterPost:
         """Timeout exception returns False."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             from requests.exceptions import Timeout
+
             mock_post.side_effect = Timeout("Request timed out")
 
             result = basic_poster.post(vcon)
@@ -159,7 +153,7 @@ class TestHttpPosterRequestFormat:
         """POST goes to the configured URL."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -173,7 +167,7 @@ class TestHttpPosterRequestFormat:
         """POST includes configured headers."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -181,16 +175,16 @@ class TestHttpPosterRequestFormat:
             poster_with_auth.post(vcon)
 
             call_kwargs = mock_post.call_args[1]
-            assert call_kwargs['headers'] == {
+            assert call_kwargs["headers"] == {
                 "Content-Type": "application/json",
-                "x-conserver-api-token": "test_token"
+                "x-conserver-api-token": "test_token",
             }
 
     def test_posts_vcon_as_json(self, basic_poster):
         """POST body contains vCon JSON."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -199,16 +193,16 @@ class TestHttpPosterRequestFormat:
 
             call_kwargs = mock_post.call_args[1]
             # Data should be JSON string
-            assert 'data' in call_kwargs
-            assert isinstance(call_kwargs['data'], str)
+            assert "data" in call_kwargs
+            assert isinstance(call_kwargs["data"], str)
             # Should contain the vcon UUID
-            assert vcon.uuid in call_kwargs['data']
+            assert vcon.uuid in call_kwargs["data"]
 
     def test_posts_with_timeout(self, basic_poster):
         """POST includes 30 second timeout."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -216,7 +210,7 @@ class TestHttpPosterRequestFormat:
             basic_poster.post(vcon)
 
             call_kwargs = mock_post.call_args[1]
-            assert call_kwargs['timeout'] == 30
+            assert call_kwargs["timeout"] == 30
 
 
 class TestHttpPosterIngressLists:
@@ -226,7 +220,7 @@ class TestHttpPosterIngressLists:
         """No ingress lists means no query params."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -234,18 +228,16 @@ class TestHttpPosterIngressLists:
             basic_poster.post(vcon)
 
             call_kwargs = mock_post.call_args[1]
-            assert call_kwargs['params'] == {}
+            assert call_kwargs["params"] == {}
 
     def test_single_ingress_list(self):
         """Single ingress list is passed as param."""
         poster = HttpPoster(
-            url="https://example.com/vcons",
-            headers={},
-            ingress_lists=["transcription"]
+            url="https://example.com/vcons", headers={}, ingress_lists=["transcription"]
         )
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -253,13 +245,13 @@ class TestHttpPosterIngressLists:
             poster.post(vcon)
 
             call_kwargs = mock_post.call_args[1]
-            assert call_kwargs['params'] == {'ingress_lists': 'transcription'}
+            assert call_kwargs["params"] == {"ingress_lists": "transcription"}
 
     def test_multiple_ingress_lists(self, poster_with_ingress):
         """Multiple ingress lists are joined with comma."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -267,9 +259,7 @@ class TestHttpPosterIngressLists:
             poster_with_ingress.post(vcon)
 
             call_kwargs = mock_post.call_args[1]
-            assert call_kwargs['params'] == {
-                'ingress_lists': 'transcription,analysis,storage'
-            }
+            assert call_kwargs["params"] == {"ingress_lists": "transcription,analysis,storage"}
 
 
 class TestHttpPosterStatusCodes:
@@ -280,7 +270,7 @@ class TestHttpPosterStatusCodes:
         """2xx status codes return True."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_post.return_value = mock_response
@@ -294,7 +284,7 @@ class TestHttpPosterStatusCodes:
         """3xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Redirect"
@@ -309,7 +299,7 @@ class TestHttpPosterStatusCodes:
         """4xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Client Error"
@@ -324,7 +314,7 @@ class TestHttpPosterStatusCodes:
         """5xx status codes return False."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = "Server Error"
@@ -342,8 +332,9 @@ class TestHttpPosterErrorHandling:
         """Handles connection errors gracefully."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             from requests.exceptions import ConnectionError
+
             mock_post.side_effect = ConnectionError("Connection refused")
 
             result = basic_poster.post(vcon)
@@ -354,8 +345,9 @@ class TestHttpPosterErrorHandling:
         """Handles SSL errors gracefully."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             from requests.exceptions import SSLError
+
             mock_post.side_effect = SSLError("SSL certificate error")
 
             result = basic_poster.post(vcon)
@@ -366,7 +358,7 @@ class TestHttpPosterErrorHandling:
         """Handles long error response text (truncated in logs)."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 400
             mock_response.text = "x" * 1000  # Very long error message
@@ -385,14 +377,14 @@ class TestHttpPosterVconSerialization:
         """vCon.to_json() is called for serialization."""
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
 
             # Spy on to_json
             original_to_json = vcon.to_json
-            with patch.object(vcon, 'to_json', wraps=original_to_json) as mock_to_json:
+            with patch.object(vcon, "to_json", wraps=original_to_json) as mock_to_json:
                 basic_poster.post(vcon)
 
                 mock_to_json.assert_called_once()
@@ -400,9 +392,10 @@ class TestHttpPosterVconSerialization:
     def test_posts_valid_json(self, basic_poster):
         """Posted data is valid JSON."""
         import json
+
         vcon = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -411,9 +404,9 @@ class TestHttpPosterVconSerialization:
 
             call_kwargs = mock_post.call_args[1]
             # Should be parseable JSON
-            parsed = json.loads(call_kwargs['data'])
+            parsed = json.loads(call_kwargs["data"])
             assert isinstance(parsed, dict)
-            assert 'uuid' in parsed
+            assert "uuid" in parsed
 
 
 class TestHttpPosterMultiplePosts:
@@ -423,7 +416,7 @@ class TestHttpPosterMultiplePosts:
         """Multiple successful posts all return True."""
         vcons = [Vcon.build_new() for _ in range(5)]
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -437,7 +430,7 @@ class TestHttpPosterMultiplePosts:
         """Mixed success and failure posts return correct results."""
         vcons = [Vcon.build_new() for _ in range(3)]
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_post.side_effect = [
                 MagicMock(status_code=200),
                 MagicMock(status_code=500, text="Error"),
@@ -453,7 +446,7 @@ class TestHttpPosterMultiplePosts:
         vcon1 = Vcon.build_new()
         vcon2 = Vcon.build_new()
 
-        with patch('core.poster.requests.post') as mock_post:
+        with patch("core.poster.requests.post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_post.return_value = mock_response
@@ -462,9 +455,9 @@ class TestHttpPosterMultiplePosts:
             basic_poster.post(vcon2)
 
             # First call should have vcon1 UUID
-            first_call_data = mock_post.call_args_list[0][1]['data']
+            first_call_data = mock_post.call_args_list[0][1]["data"]
             assert vcon1.uuid in first_call_data
 
             # Second call should have vcon2 UUID
-            second_call_data = mock_post.call_args_list[1][1]['data']
+            second_call_data = mock_post.call_args_list[1][1]["data"]
             assert vcon2.uuid in second_call_data

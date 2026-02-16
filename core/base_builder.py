@@ -3,12 +3,12 @@
 import base64
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
-from vcon import Vcon
-from vcon.party import Party
-from vcon.dialog import Dialog
+from datetime import datetime
+from typing import Any
 
+from vcon import Vcon
+from vcon.dialog import Dialog
+from vcon.party import Party
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,13 @@ class BaseRecordingData(ABC):
 
     @property
     @abstractmethod
-    def recording_url(self) -> Optional[str]:
+    def recording_url(self) -> str | None:
         """URL to download the recording, if available."""
         pass
 
     @property
     @abstractmethod
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Recording duration in seconds."""
         pass
 
@@ -70,7 +70,7 @@ class BaseRecordingData(ABC):
         pass
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """Platform-specific tags to add to the vCon.
 
         Override in subclasses to add platform-specific metadata.
@@ -90,11 +90,7 @@ class BaseVconBuilder(ABC):
     # Override in subclasses to identify the adapter
     ADAPTER_SOURCE = "generic_adapter"
 
-    def __init__(
-        self,
-        download_recordings: bool = True,
-        recording_format: str = "wav"
-    ):
+    def __init__(self, download_recordings: bool = True, recording_format: str = "wav"):
         """Initialize builder.
 
         Args:
@@ -105,7 +101,7 @@ class BaseVconBuilder(ABC):
         self.recording_format = recording_format
 
     @abstractmethod
-    def _download_recording(self, recording_data: BaseRecordingData) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download recording audio from the platform.
 
         Args:
@@ -131,7 +127,7 @@ class BaseVconBuilder(ABC):
             return 0
         return 1
 
-    def build(self, recording_data: BaseRecordingData) -> Optional[Vcon]:
+    def build(self, recording_data: BaseRecordingData) -> Vcon | None:
         """Build a vCon from recording data.
 
         Args:
@@ -162,7 +158,7 @@ class BaseVconBuilder(ABC):
 
             # Build dialog
             mime_type = MIME_TYPES.get(self.recording_format, "audio/wav")
-            dialog_kwargs: Dict[str, Any] = {
+            dialog_kwargs: dict[str, Any] = {
                 "type": "recording",
                 "start": start_time,
                 "parties": [0, 1],
@@ -178,7 +174,7 @@ class BaseVconBuilder(ABC):
             if self.download_recordings and recording_data.recording_url:
                 audio_data = self._download_recording(recording_data)
                 if audio_data:
-                    audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                    audio_base64 = base64.b64encode(audio_data).decode("utf-8")
                     dialog_kwargs["body"] = audio_base64
                     dialog_kwargs["encoding"] = "base64"
                     dialog_kwargs["filename"] = (
@@ -189,14 +185,10 @@ class BaseVconBuilder(ABC):
                     logger.warning(
                         f"Download failed, using URL reference for {recording_data.recording_id}"
                     )
-                    dialog_kwargs["url"] = (
-                        f"{recording_data.recording_url}.{self.recording_format}"
-                    )
+                    dialog_kwargs["url"] = f"{recording_data.recording_url}.{self.recording_format}"
             elif recording_data.recording_url:
                 # Use URL reference without downloading
-                dialog_kwargs["url"] = (
-                    f"{recording_data.recording_url}.{self.recording_format}"
-                )
+                dialog_kwargs["url"] = f"{recording_data.recording_url}.{self.recording_format}"
 
             # Create dialog
             dialog = Dialog(**dialog_kwargs)
@@ -217,7 +209,5 @@ class BaseVconBuilder(ABC):
             return vcon
 
         except Exception as e:
-            logger.error(
-                f"Error building vCon from recording {recording_data.recording_id}: {e}"
-            )
+            logger.error(f"Error building vCon from recording {recording_data.recording_id}: {e}")
             return None

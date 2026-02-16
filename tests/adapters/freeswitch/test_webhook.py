@@ -1,11 +1,13 @@
 """Tests for FreeSWITCH webhook endpoints."""
 
-import json
 import hashlib
 import hmac
+import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
 from adapters.freeswitch.config import FreeSwitchConfig
 from adapters.freeswitch.webhook import create_app
 
@@ -45,8 +47,10 @@ class TestFreeSwitchWebhook:
 
     def test_recording_event_success(self, config, sample_recording_event):
         """Test successful recording event processing."""
-        with patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -70,8 +74,10 @@ class TestFreeSwitchWebhook:
 
     def test_recording_event_duplicate(self, config, sample_recording_event):
         """Test duplicate recording event handling."""
-        with patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -115,8 +121,10 @@ class TestFreeSwitchWebhook:
 
     def test_get_recording_status(self, config, sample_recording_event):
         """Test getting recording status."""
-        with patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.freeswitch.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.freeswitch.webhook.FreeSwitchVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -173,11 +181,7 @@ class TestFreeSwitchWebhookValidation:
     def test_webhook_valid_signature(self, config_with_validation):
         """Test webhook with valid signature."""
         data = json.dumps({"uuid": "abc123"}).encode()
-        signature = hmac.new(
-            b"test-secret",
-            data,
-            hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(b"test-secret", data, hashlib.sha256).hexdigest()
 
         app = create_app(config_with_validation)
         client = TestClient(app)

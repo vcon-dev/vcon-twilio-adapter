@@ -3,12 +3,12 @@
 import base64
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
+
 import requests
 from vcon import Vcon
-from vcon.party import Party
 from vcon.dialog import Dialog
-
+from vcon.party import Party
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ MIME_TYPES = {
 class TwilioRecordingData:
     """Data class to hold Twilio recording webhook data."""
 
-    def __init__(self, webhook_data: Dict[str, Any]):
+    def __init__(self, webhook_data: dict[str, Any]):
         """Initialize from Twilio webhook payload.
 
         Args:
@@ -68,7 +68,7 @@ class TwilioRecordingData:
         self._raw_data = webhook_data
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Get recording duration in seconds."""
         if self.recording_duration:
             try:
@@ -84,6 +84,7 @@ class TwilioRecordingData:
             try:
                 # Twilio sends timestamps in RFC 2822 format
                 from email.utils import parsedate_to_datetime
+
                 return parsedate_to_datetime(self.recording_start_time)
             except Exception:
                 pass
@@ -97,7 +98,7 @@ class VconBuilder:
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        twilio_auth: Optional[tuple] = None
+        twilio_auth: tuple | None = None,
     ):
         """Initialize builder.
 
@@ -110,7 +111,7 @@ class VconBuilder:
         self.recording_format = recording_format
         self.twilio_auth = twilio_auth
 
-    def _download_recording(self, recording_url: str) -> Optional[bytes]:
+    def _download_recording(self, recording_url: str) -> bytes | None:
         """Download recording audio from Twilio.
 
         Args:
@@ -123,19 +124,14 @@ class VconBuilder:
         url = f"{recording_url}.{self.recording_format}"
 
         try:
-            response = requests.get(
-                url,
-                auth=self.twilio_auth,
-                timeout=60
-            )
+            response = requests.get(url, auth=self.twilio_auth, timeout=60)
 
             if response.status_code == 200:
                 logger.debug(f"Downloaded recording: {len(response.content)} bytes")
                 return response.content
             else:
                 logger.error(
-                    f"Failed to download recording from {url}: "
-                    f"status {response.status_code}"
+                    f"Failed to download recording from {url}: " f"status {response.status_code}"
                 )
                 return None
 
@@ -143,7 +139,7 @@ class VconBuilder:
             logger.error(f"Error downloading recording from {url}: {e}")
             return None
 
-    def build(self, recording_data: TwilioRecordingData) -> Optional[Vcon]:
+    def build(self, recording_data: TwilioRecordingData) -> Vcon | None:
         """Build a vCon from Twilio recording data.
 
         Args:
@@ -191,7 +187,7 @@ class VconBuilder:
             if self.download_recordings and recording_data.recording_url:
                 audio_data = self._download_recording(recording_data.recording_url)
                 if audio_data:
-                    audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                    audio_base64 = base64.b64encode(audio_data).decode("utf-8")
                     dialog_kwargs["body"] = audio_base64
                     dialog_kwargs["encoding"] = "base64"
                     dialog_kwargs["filename"] = (
@@ -202,14 +198,10 @@ class VconBuilder:
                     logger.warning(
                         f"Download failed, using URL reference for {recording_data.recording_sid}"
                     )
-                    dialog_kwargs["url"] = (
-                        f"{recording_data.recording_url}.{self.recording_format}"
-                    )
+                    dialog_kwargs["url"] = f"{recording_data.recording_url}.{self.recording_format}"
             elif recording_data.recording_url:
                 # Use URL reference without downloading
-                dialog_kwargs["url"] = (
-                    f"{recording_data.recording_url}.{self.recording_format}"
-                )
+                dialog_kwargs["url"] = f"{recording_data.recording_url}.{self.recording_format}"
 
             # Create dialog
             dialog = Dialog(**dialog_kwargs)
@@ -228,10 +220,7 @@ class VconBuilder:
                 vcon.add_tag("recording_source", recording_data.recording_source)
 
             if recording_data.duration_seconds is not None:
-                vcon.add_tag(
-                    "duration_seconds",
-                    f"{recording_data.duration_seconds:.2f}"
-                )
+                vcon.add_tag("duration_seconds", f"{recording_data.duration_seconds:.2f}")
 
             # Add geographic metadata if available
             if recording_data.caller_city:
@@ -255,7 +244,5 @@ class VconBuilder:
             return vcon
 
         except Exception as e:
-            logger.error(
-                f"Error building vCon from recording {recording_data.recording_sid}: {e}"
-            )
+            logger.error(f"Error building vCon from recording {recording_data.recording_sid}: {e}")
             return None

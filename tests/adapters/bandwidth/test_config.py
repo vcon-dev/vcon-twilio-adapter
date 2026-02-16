@@ -1,6 +1,7 @@
 """Tests for Bandwidth configuration."""
 
 import pytest
+
 from adapters.bandwidth.config import BandwidthConfig
 
 

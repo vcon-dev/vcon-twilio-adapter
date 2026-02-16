@@ -3,12 +3,11 @@
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
 from core.base_builder import BaseRecordingData, BaseVconBuilder
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class FreeSwitchRecordingData(BaseRecordingData):
     - recording_url: URL to download recording (if using HTTP storage)
     """
 
-    def __init__(self, event_data: Dict[str, Any]):
+    def __init__(self, event_data: dict[str, Any]):
         """Initialize from FreeSWITCH event data.
 
         Args:
@@ -48,26 +47,17 @@ class FreeSwitchRecordingData(BaseRecordingData):
     @property
     def from_number(self) -> str:
         """Caller's phone number."""
-        return self._data.get(
-            "caller_id_number",
-            self._data.get("Caller-Caller-ID-Number", "")
-        )
+        return self._data.get("caller_id_number", self._data.get("Caller-Caller-ID-Number", ""))
 
     @property
     def to_number(self) -> str:
         """Called phone number."""
-        return self._data.get(
-            "destination_number",
-            self._data.get("Caller-Destination-Number", "")
-        )
+        return self._data.get("destination_number", self._data.get("Caller-Destination-Number", ""))
 
     @property
     def direction(self) -> str:
         """Call direction."""
-        direction = self._data.get(
-            "direction",
-            self._data.get("Caller-Direction", "inbound")
-        )
+        direction = self._data.get("direction", self._data.get("Caller-Direction", "inbound"))
         return direction.lower()
 
     @property
@@ -76,16 +66,15 @@ class FreeSwitchRecordingData(BaseRecordingData):
         return self._data.get("recording_url", self._data.get("recording_file", ""))
 
     @property
-    def recording_file_path(self) -> Optional[str]:
+    def recording_file_path(self) -> str | None:
         """Local file path to the recording (if available)."""
         return self._data.get("recording_file", self._data.get("Record-File-Path"))
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Recording duration in seconds."""
         duration = self._data.get(
-            "record_seconds",
-            self._data.get("duration", self._data.get("variable_duration"))
+            "record_seconds", self._data.get("duration", self._data.get("variable_duration"))
         )
         if duration is not None:
             try:
@@ -98,10 +87,7 @@ class FreeSwitchRecordingData(BaseRecordingData):
     def start_time(self) -> datetime:
         """Recording start time."""
         # Try Unix timestamp first
-        start_epoch = self._data.get(
-            "start_epoch",
-            self._data.get("Caller-Channel-Created-Time")
-        )
+        start_epoch = self._data.get("start_epoch", self._data.get("Caller-Channel-Created-Time"))
         if start_epoch:
             try:
                 # FreeSWITCH sometimes provides microseconds
@@ -123,7 +109,7 @@ class FreeSwitchRecordingData(BaseRecordingData):
         return datetime.now(timezone.utc)
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """FreeSWITCH-specific metadata tags."""
         tags = {
             "freeswitch_uuid": self.recording_id,
@@ -157,8 +143,8 @@ class FreeSwitchVconBuilder(BaseVconBuilder):
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        recordings_path: Optional[str] = None,
-        recordings_url_base: Optional[str] = None,
+        recordings_path: str | None = None,
+        recordings_url_base: str | None = None,
     ):
         """Initialize FreeSWITCH vCon builder.
 
@@ -172,10 +158,7 @@ class FreeSwitchVconBuilder(BaseVconBuilder):
         self.recordings_path = recordings_path or "/var/lib/freeswitch/recordings"
         self.recordings_url_base = recordings_url_base
 
-    def _download_recording(
-        self,
-        recording_data: BaseRecordingData
-    ) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download or read recording from FreeSWITCH.
 
         Args:
@@ -216,7 +199,7 @@ class FreeSwitchVconBuilder(BaseVconBuilder):
                 logger.debug(f"Reading recording from file: {file_path}")
                 with open(file_path, "rb") as f:
                     return f.read()
-            except IOError as e:
+            except OSError as e:
                 logger.error(f"Failed to read recording file: {e}")
 
         # Try constructing URL from base
@@ -231,7 +214,5 @@ class FreeSwitchVconBuilder(BaseVconBuilder):
             except requests.RequestException as e:
                 logger.warning(f"Failed to download from constructed URL: {e}")
 
-        logger.error(
-            f"Could not access recording for {fs_data.recording_id}"
-        )
+        logger.error(f"Could not access recording for {fs_data.recording_id}")
         return None

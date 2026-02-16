@@ -1,10 +1,9 @@
 """HTTP poster to send vCons to conserver endpoint."""
 
 import logging
-import requests
-from typing import Dict, List, Optional
-from vcon import Vcon
 
+import requests
+from vcon import Vcon
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +12,7 @@ class HttpPoster:
     """Posts vCons to HTTP conserver endpoint."""
 
     def __init__(
-        self,
-        url: str,
-        headers: Dict[str, str],
-        ingress_lists: Optional[List[str]] = None
+        self, url: str, headers: dict[str, str], ingress_lists: list[str] | None = None
     ):
         """Initialize HTTP poster.
 
@@ -43,7 +39,7 @@ class HttpPoster:
             url = self.url
             params = {}
             if self.ingress_lists:
-                params['ingress_lists'] = ','.join(self.ingress_lists)
+                params["ingress_lists"] = ",".join(self.ingress_lists)
                 logger.info(
                     f"Posting vCon {vcon.uuid} to {url} "
                     f"with ingress_lists: {', '.join(self.ingress_lists)}"
@@ -56,18 +52,13 @@ class HttpPoster:
 
             # POST to endpoint
             response = requests.post(
-                url,
-                params=params,
-                data=vcon_json,
-                headers=self.headers,
-                timeout=30
+                url, params=params, data=vcon_json, headers=self.headers, timeout=30
             )
 
             # Check if response indicates success
             if 200 <= response.status_code < 300:
                 logger.info(
-                    f"Successfully posted vCon {vcon.uuid} "
-                    f"(status: {response.status_code})"
+                    f"Successfully posted vCon {vcon.uuid} " f"(status: {response.status_code})"
                 )
                 return True
             else:

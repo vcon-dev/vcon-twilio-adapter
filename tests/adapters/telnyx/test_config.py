@@ -1,6 +1,7 @@
 """Tests for Telnyx configuration."""
 
 import pytest
+
 from adapters.telnyx.config import TelnyxConfig
 
 

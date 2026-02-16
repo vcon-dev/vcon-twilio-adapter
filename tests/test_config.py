@@ -1,6 +1,5 @@
 """Comprehensive tests for configuration module."""
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -257,7 +256,7 @@ class TestConfigGetHeaders:
 
         assert headers == {
             "Content-Type": "application/json",
-            "x-conserver-api-token": "my_secret_token"
+            "x-conserver-api-token": "my_secret_token",
         }
 
     def test_headers_with_custom_header_name(self, minimal_env):
@@ -267,10 +266,7 @@ class TestConfigGetHeaders:
         config = Config()
         headers = config.get_headers()
 
-        assert headers == {
-            "Content-Type": "application/json",
-            "X-API-Key": "token123"
-        }
+        assert headers == {"Content-Type": "application/json", "X-API-Key": "token123"}
 
 
 class TestConfigGetTwilioAuth:
@@ -313,7 +309,7 @@ class TestConfigFromEnvFile:
 
     def test_loads_from_env_file(self, clean_env):
         """Configuration loads from .env file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
             f.write("CONSERVER_URL=https://from-file.example.com/vcons\n")
             f.write("VALIDATE_TWILIO_SIGNATURE=false\n")
             f.write("PORT=7777\n")
@@ -328,7 +324,7 @@ class TestConfigFromEnvFile:
 
     def test_env_variables_override_file(self, clean_env):
         """Environment variables override .env file values."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.env', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".env", delete=False) as f:
             f.write("CONSERVER_URL=https://from-file.example.com/vcons\n")
             f.write("VALIDATE_TWILIO_SIGNATURE=false\n")
             f.write("PORT=7777\n")
@@ -365,10 +361,7 @@ class TestConfigFullConfiguration:
     def test_full_config_headers(self, full_config):
         """Full config produces correct headers."""
         headers = full_config.get_headers()
-        assert headers == {
-            "Content-Type": "application/json",
-            "x-custom-token": "test_api_token"
-        }
+        assert headers == {"Content-Type": "application/json", "x-custom-token": "test_api_token"}
 
     def test_full_config_twilio_auth(self, full_config):
         """Full config produces correct Twilio auth."""

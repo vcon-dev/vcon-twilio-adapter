@@ -2,11 +2,11 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
+
 import requests
 
 from core.base_builder import BaseRecordingData, BaseVconBuilder
-
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TwilioRecordingData(BaseRecordingData):
     """Data class to hold Twilio recording webhook data."""
 
-    def __init__(self, webhook_data: Dict[str, Any]):
+    def __init__(self, webhook_data: dict[str, Any]):
         """Initialize from Twilio webhook payload.
 
         Args:
@@ -86,7 +86,7 @@ class TwilioRecordingData(BaseRecordingData):
         return self._recording_url
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Get recording duration in seconds."""
         if self.recording_duration:
             try:
@@ -102,13 +102,14 @@ class TwilioRecordingData(BaseRecordingData):
             try:
                 # Twilio sends timestamps in RFC 2822 format
                 from email.utils import parsedate_to_datetime
+
                 return parsedate_to_datetime(self.recording_start_time)
             except Exception:
                 pass
         return datetime.now(timezone.utc)
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """Twilio-specific tags to add to the vCon."""
         tags = {
             "recording_sid": self.recording_sid,
@@ -151,7 +152,7 @@ class TwilioVconBuilder(BaseVconBuilder):
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        twilio_auth: Optional[tuple] = None
+        twilio_auth: tuple | None = None,
     ):
         """Initialize builder.
 
@@ -163,7 +164,7 @@ class TwilioVconBuilder(BaseVconBuilder):
         super().__init__(download_recordings, recording_format)
         self.twilio_auth = twilio_auth
 
-    def _download_recording(self, recording_data: BaseRecordingData) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download recording audio from Twilio.
 
         Args:
@@ -180,19 +181,14 @@ class TwilioVconBuilder(BaseVconBuilder):
         url = f"{recording_url}.{self.recording_format}"
 
         try:
-            response = requests.get(
-                url,
-                auth=self.twilio_auth,
-                timeout=60
-            )
+            response = requests.get(url, auth=self.twilio_auth, timeout=60)
 
             if response.status_code == 200:
                 logger.debug(f"Downloaded recording: {len(response.content)} bytes")
                 return response.content
             else:
                 logger.error(
-                    f"Failed to download recording from {url}: "
-                    f"status {response.status_code}"
+                    f"Failed to download recording from {url}: " f"status {response.status_code}"
                 )
                 return None
 

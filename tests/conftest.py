@@ -1,21 +1,21 @@
 """Shared pytest fixtures for telephony adapter tests."""
 
-import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
+from adapters.twilio.builder import TwilioRecordingData, TwilioVconBuilder
+from adapters.twilio.config import TwilioConfig
+from adapters.twilio.webhook import create_app
+
 # Import from new structure (core + adapters)
 from core.poster import HttpPoster
 from core.tracker import StateTracker
-from adapters.twilio.config import TwilioConfig
-from adapters.twilio.builder import TwilioRecordingData, TwilioVconBuilder
-from adapters.twilio.webhook import create_app
 
 # Backwards compatibility aliases
 Config = TwilioConfig
@@ -26,15 +26,25 @@ VconBuilder = TwilioVconBuilder
 # Environment Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def clean_env(monkeypatch):
     """Clean environment of all adapter-related variables."""
     env_vars = [
-        "CONSERVER_URL", "CONSERVER_API_TOKEN", "CONSERVER_HEADER_NAME",
-        "TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "VALIDATE_TWILIO_SIGNATURE",
-        "WEBHOOK_URL", "HOST", "PORT", "LOG_LEVEL",
-        "DOWNLOAD_RECORDINGS", "RECORDING_FORMAT",
-        "STATE_FILE", "INGRESS_LISTS",
+        "CONSERVER_URL",
+        "CONSERVER_API_TOKEN",
+        "CONSERVER_HEADER_NAME",
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "VALIDATE_TWILIO_SIGNATURE",
+        "WEBHOOK_URL",
+        "HOST",
+        "PORT",
+        "LOG_LEVEL",
+        "DOWNLOAD_RECORDINGS",
+        "RECORDING_FORMAT",
+        "STATE_FILE",
+        "INGRESS_LISTS",
     ]
     for var in env_vars:
         monkeypatch.delenv(var, raising=False)
@@ -72,6 +82,7 @@ def full_env(clean_env):
 # Config Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def minimal_config(minimal_env):
     """Config with minimal settings."""
@@ -88,8 +99,9 @@ def full_config(full_env):
 # Twilio Webhook Data Fixtures
 # =============================================================================
 
+
 @pytest.fixture
-def basic_webhook_data() -> Dict[str, Any]:
+def basic_webhook_data() -> dict[str, Any]:
     """Basic Twilio recording webhook data."""
     # NOTE: These are intentionally fake test values, not real credentials
     return {
@@ -110,7 +122,7 @@ def basic_webhook_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def full_webhook_data(basic_webhook_data) -> Dict[str, Any]:
+def full_webhook_data(basic_webhook_data) -> dict[str, Any]:
     """Full Twilio recording webhook data with all fields."""
     return {
         **basic_webhook_data,
@@ -130,7 +142,7 @@ def full_webhook_data(basic_webhook_data) -> Dict[str, Any]:
 
 
 @pytest.fixture
-def outbound_webhook_data(basic_webhook_data) -> Dict[str, Any]:
+def outbound_webhook_data(basic_webhook_data) -> dict[str, Any]:
     """Webhook data for outbound call."""
     return {
         **basic_webhook_data,
@@ -139,7 +151,7 @@ def outbound_webhook_data(basic_webhook_data) -> Dict[str, Any]:
 
 
 @pytest.fixture
-def minimal_webhook_data() -> Dict[str, Any]:
+def minimal_webhook_data() -> dict[str, Any]:
     """Minimal webhook data with only required fields."""
     return {
         "RecordingSid": "RE_MINIMAL",
@@ -150,7 +162,7 @@ def minimal_webhook_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def in_progress_webhook_data(basic_webhook_data) -> Dict[str, Any]:
+def in_progress_webhook_data(basic_webhook_data) -> dict[str, Any]:
     """Webhook data for in-progress recording."""
     return {
         **basic_webhook_data,
@@ -159,7 +171,7 @@ def in_progress_webhook_data(basic_webhook_data) -> Dict[str, Any]:
 
 
 @pytest.fixture
-def failed_webhook_data(basic_webhook_data) -> Dict[str, Any]:
+def failed_webhook_data(basic_webhook_data) -> dict[str, Any]:
     """Webhook data for failed recording."""
     return {
         **basic_webhook_data,
@@ -168,7 +180,7 @@ def failed_webhook_data(basic_webhook_data) -> Dict[str, Any]:
 
 
 @pytest.fixture
-def absent_webhook_data(basic_webhook_data) -> Dict[str, Any]:
+def absent_webhook_data(basic_webhook_data) -> dict[str, Any]:
     """Webhook data for absent recording."""
     return {
         **basic_webhook_data,
@@ -179,6 +191,7 @@ def absent_webhook_data(basic_webhook_data) -> Dict[str, Any]:
 # =============================================================================
 # Recording Data Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def basic_recording_data(basic_webhook_data) -> TwilioRecordingData:
@@ -196,6 +209,7 @@ def full_recording_data(full_webhook_data) -> TwilioRecordingData:
 # Builder Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def builder_no_download() -> TwilioVconBuilder:
     """VconBuilder that doesn't download recordings."""
@@ -212,9 +226,7 @@ def builder_mp3() -> TwilioVconBuilder:
 def builder_with_auth() -> TwilioVconBuilder:
     """VconBuilder with Twilio auth configured."""
     return TwilioVconBuilder(
-        download_recordings=True,
-        recording_format="wav",
-        twilio_auth=("AC123", "auth_token")
+        download_recordings=True, recording_format="wav", twilio_auth=("AC123", "auth_token")
     )
 
 
@@ -222,13 +234,11 @@ def builder_with_auth() -> TwilioVconBuilder:
 # Poster Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def basic_poster() -> HttpPoster:
     """Basic HttpPoster without ingress lists."""
-    return HttpPoster(
-        url="https://example.com/vcons",
-        headers={"Content-Type": "application/json"}
-    )
+    return HttpPoster(url="https://example.com/vcons", headers={"Content-Type": "application/json"})
 
 
 @pytest.fixture
@@ -236,10 +246,7 @@ def poster_with_auth() -> HttpPoster:
     """HttpPoster with authentication headers."""
     return HttpPoster(
         url="https://example.com/vcons",
-        headers={
-            "Content-Type": "application/json",
-            "x-conserver-api-token": "test_token"
-        }
+        headers={"Content-Type": "application/json", "x-conserver-api-token": "test_token"},
     )
 
 
@@ -249,13 +256,14 @@ def poster_with_ingress() -> HttpPoster:
     return HttpPoster(
         url="https://example.com/vcons",
         headers={"Content-Type": "application/json"},
-        ingress_lists=["transcription", "analysis", "storage"]
+        ingress_lists=["transcription", "analysis", "storage"],
     )
 
 
 # =============================================================================
 # Tracker Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def temp_state_file():
@@ -286,6 +294,7 @@ def preloaded_tracker(temp_state_file) -> StateTracker:
 # =============================================================================
 # Webhook/API Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def mock_config(minimal_env):
@@ -321,30 +330,32 @@ def mock_failing_poster():
 # Sample Audio Data Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def sample_audio_bytes() -> bytes:
     """Sample audio data (fake WAV header + data)."""
     # Minimal WAV file header
     return (
-        b'RIFF'
-        b'\x24\x00\x00\x00'  # File size
-        b'WAVE'
-        b'fmt '
-        b'\x10\x00\x00\x00'  # Chunk size
-        b'\x01\x00'          # Audio format (PCM)
-        b'\x01\x00'          # Num channels
-        b'\x44\xac\x00\x00'  # Sample rate (44100)
-        b'\x88\x58\x01\x00'  # Byte rate
-        b'\x02\x00'          # Block align
-        b'\x10\x00'          # Bits per sample
-        b'data'
-        b'\x00\x00\x00\x00'  # Data size
+        b"RIFF"
+        b"\x24\x00\x00\x00"  # File size
+        b"WAVE"
+        b"fmt "
+        b"\x10\x00\x00\x00"  # Chunk size
+        b"\x01\x00"  # Audio format (PCM)
+        b"\x01\x00"  # Num channels
+        b"\x44\xac\x00\x00"  # Sample rate (44100)
+        b"\x88\x58\x01\x00"  # Byte rate
+        b"\x02\x00"  # Block align
+        b"\x10\x00"  # Bits per sample
+        b"data"
+        b"\x00\x00\x00\x00"  # Data size
     )
 
 
 # =============================================================================
 # Utility Functions
 # =============================================================================
+
 
 def create_mock_response(status_code: int, content: bytes = b"", text: str = ""):
     """Create a mock requests.Response object."""

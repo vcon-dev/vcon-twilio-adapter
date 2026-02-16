@@ -1,11 +1,8 @@
 """Comprehensive tests for webhook module."""
 
-import tempfile
 import uuid
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 
 from adapters.twilio.config import TwilioConfig as Config
@@ -20,6 +17,7 @@ def unique_recording_sid(prefix: str = "RE_TEST") -> str:
 # =============================================================================
 # Health Endpoint Tests
 # =============================================================================
+
 
 class TestHealthEndpoint:
     """Tests for health check endpoint."""
@@ -54,6 +52,7 @@ class TestHealthEndpoint:
 # Recording Webhook - Basic Tests
 # =============================================================================
 
+
 class TestRecordingWebhookBasic:
     """Basic tests for recording webhook endpoint."""
 
@@ -64,7 +63,7 @@ class TestRecordingWebhookBasic:
             data={
                 "RecordingSid": "RE123",
                 "RecordingStatus": "in-progress",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -76,7 +75,7 @@ class TestRecordingWebhookBasic:
             data={
                 "RecordingSid": "RE123",
                 "RecordingStatus": "in-progress",
-            }
+            },
         )
 
         assert response.text == "OK"
@@ -84,8 +83,7 @@ class TestRecordingWebhookBasic:
     def test_accepts_form_encoded_data(self, test_client):
         """Accepts form-encoded POST data."""
         response = test_client.post(
-            "/webhook/recording",
-            data={"RecordingSid": "RE123", "RecordingStatus": "completed"}
+            "/webhook/recording", data={"RecordingSid": "RE123", "RecordingStatus": "completed"}
         )
 
         assert response.status_code == 200
@@ -94,6 +92,7 @@ class TestRecordingWebhookBasic:
 # =============================================================================
 # Recording Webhook - Status Filtering
 # =============================================================================
+
 
 class TestRecordingWebhookStatusFiltering:
     """Tests for recording status filtering."""
@@ -107,7 +106,7 @@ class TestRecordingWebhookStatusFiltering:
                 "RecordingStatus": "in-progress",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -124,7 +123,7 @@ class TestRecordingWebhookStatusFiltering:
                 "RecordingStatus": "failed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -138,7 +137,7 @@ class TestRecordingWebhookStatusFiltering:
                 "RecordingStatus": "absent",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -161,7 +160,7 @@ class TestRecordingWebhookStatusFiltering:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -171,6 +170,7 @@ class TestRecordingWebhookStatusFiltering:
 # =============================================================================
 # Recording Webhook - Duplicate Prevention
 # =============================================================================
+
 
 class TestRecordingWebhookDuplicatePrevention:
     """Tests for duplicate recording prevention."""
@@ -193,7 +193,7 @@ class TestRecordingWebhookDuplicatePrevention:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Reset mock to track second call
@@ -207,7 +207,7 @@ class TestRecordingWebhookDuplicatePrevention:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Should not have posted again
@@ -228,7 +228,7 @@ class TestRecordingWebhookDuplicatePrevention:
                     "RecordingStatus": "completed",
                     "From": "+15551234567",
                     "To": "+15559876543",
-                }
+                },
             )
 
         # Second request (without mock, but already tracked)
@@ -239,7 +239,7 @@ class TestRecordingWebhookDuplicatePrevention:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -249,6 +249,7 @@ class TestRecordingWebhookDuplicatePrevention:
 # =============================================================================
 # Recording Webhook - Full Processing
 # =============================================================================
+
 
 class TestRecordingWebhookFullProcessing:
     """Tests for full recording processing flow."""
@@ -276,7 +277,7 @@ class TestRecordingWebhookFullProcessing:
                 "From": "+15551234567",
                 "To": "+15559876543",
                 "Direction": "inbound",
-            }
+            },
         )
 
         # Verify vCon was posted
@@ -306,7 +307,7 @@ class TestRecordingWebhookFullProcessing:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Check status
@@ -333,7 +334,7 @@ class TestRecordingWebhookFullProcessing:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Check status
@@ -346,6 +347,7 @@ class TestRecordingWebhookFullProcessing:
 # =============================================================================
 # Recording Webhook - All Parameters
 # =============================================================================
+
 
 class TestRecordingWebhookAllParameters:
     """Tests for handling all webhook parameters."""
@@ -389,7 +391,7 @@ class TestRecordingWebhookAllParameters:
                 "CalledState": "NY",
                 "CalledZip": "10001",
                 "CalledCountry": "US",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -410,7 +412,7 @@ class TestRecordingWebhookAllParameters:
             data={
                 "RecordingSid": recording_sid,
                 "RecordingStatus": "completed",
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -419,6 +421,7 @@ class TestRecordingWebhookAllParameters:
 # =============================================================================
 # Status Endpoint Tests
 # =============================================================================
+
 
 class TestStatusEndpoint:
     """Tests for status endpoint."""
@@ -455,7 +458,7 @@ class TestStatusEndpoint:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Check status
@@ -482,7 +485,7 @@ class TestStatusEndpoint:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Check status
@@ -510,7 +513,7 @@ class TestStatusEndpoint:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Check status
@@ -523,6 +526,7 @@ class TestStatusEndpoint:
 # =============================================================================
 # App Factory Tests
 # =============================================================================
+
 
 class TestCreateApp:
     """Tests for create_app factory function."""
@@ -555,8 +559,7 @@ class TestCreateApp:
         client = TestClient(app)
 
         response = client.post(
-            "/webhook/recording",
-            data={"RecordingSid": "RE123", "RecordingStatus": "in-progress"}
+            "/webhook/recording", data={"RecordingSid": "RE123", "RecordingStatus": "in-progress"}
         )
         assert response.status_code == 200
 
@@ -574,6 +577,7 @@ class TestCreateApp:
 # =============================================================================
 # Signature Validation Tests
 # =============================================================================
+
 
 class TestTwilioSignatureValidation:
     """Tests for Twilio signature validation."""
@@ -607,7 +611,7 @@ class TestTwilioSignatureValidation:
                 "RecordingSid": "RE_INVALID_SIG",
                 "RecordingStatus": "completed",
             },
-            headers={"X-Twilio-Signature": "invalid_signature"}
+            headers={"X-Twilio-Signature": "invalid_signature"},
         )
 
         assert response.status_code == 403
@@ -616,6 +620,7 @@ class TestTwilioSignatureValidation:
 # =============================================================================
 # Error Handling Tests
 # =============================================================================
+
 
 class TestWebhookErrorHandling:
     """Tests for error handling in webhook."""
@@ -638,7 +643,7 @@ class TestWebhookErrorHandling:
                     "RecordingStatus": "completed",
                     "From": "+15551234567",
                     "To": "+15559876543",
-                }
+                },
             )
 
             # Should still return OK to prevent Twilio retries
@@ -663,7 +668,7 @@ class TestWebhookErrorHandling:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
 
         # Should still return OK to prevent Twilio retries
@@ -674,6 +679,7 @@ class TestWebhookErrorHandling:
 # =============================================================================
 # Integration-Style Tests
 # =============================================================================
+
 
 class TestWebhookIntegration:
     """Integration-style tests for the webhook."""
@@ -696,7 +702,7 @@ class TestWebhookIntegration:
             data={
                 "RecordingSid": recording_sid,
                 "RecordingStatus": "in-progress",
-            }
+            },
         )
         assert response.status_code == 200
 
@@ -708,7 +714,7 @@ class TestWebhookIntegration:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
         assert response.status_code == 200
 
@@ -727,7 +733,7 @@ class TestWebhookIntegration:
                 "RecordingStatus": "completed",
                 "From": "+15551234567",
                 "To": "+15559876543",
-            }
+            },
         )
         assert response.status_code == 200
         mock_poster.post.assert_not_called()
@@ -754,7 +760,7 @@ class TestWebhookIntegration:
                     "RecordingStatus": "completed",
                     "From": f"+1555000{i:04d}",
                     "To": "+15559876543",
-                }
+                },
             )
             assert response.status_code == 200
 

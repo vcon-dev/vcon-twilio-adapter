@@ -1,17 +1,16 @@
 """FastAPI webhook receiver for Telnyx recording events."""
 
 import base64
-import hashlib
 import logging
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException, Header
+
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
-from .builder import TelnyxRecordingData, TelnyxVconBuilder
-from .config import TelnyxConfig
 from core.poster import HttpPoster
 from core.tracker import StateTracker
 
+from .builder import TelnyxRecordingData, TelnyxVconBuilder
+from .config import TelnyxConfig
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +27,7 @@ def create_app(config: TelnyxConfig) -> FastAPI:
     app = FastAPI(
         title="vCon Telnyx Adapter",
         description="Receives Telnyx recording events and creates vCons",
-        version="0.1.0"
+        version="0.1.0",
     )
 
     # Initialize components
@@ -37,17 +36,13 @@ def create_app(config: TelnyxConfig) -> FastAPI:
         recording_format=config.recording_format,
         api_key=config.telnyx_api_key,
     )
-    poster = HttpPoster(
-        config.conserver_url,
-        config.get_headers(),
-        config.ingress_lists
-    )
+    poster = HttpPoster(config.conserver_url, config.get_headers(), config.ingress_lists)
     tracker = StateTracker(config.state_file)
 
     def validate_telnyx_signature(
         request_body: bytes,
-        signature: Optional[str],
-        timestamp: Optional[str],
+        signature: str | None,
+        timestamp: str | None,
     ) -> bool:
         """Validate Telnyx webhook signature.
 
@@ -81,17 +76,14 @@ def create_app(config: TelnyxConfig) -> FastAPI:
 
             # Verify using ed25519 (requires cryptography library)
             try:
-                from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-                    Ed25519PublicKey
-                )
+                from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
                 public_key_bytes = base64.b64decode(config.telnyx_public_key)
                 public_key = Ed25519PublicKey.from_public_bytes(public_key_bytes)
                 public_key.verify(signature_bytes, signed_payload)
                 return True
             except ImportError:
-                logger.warning(
-                    "cryptography library not installed, skipping signature validation"
-                )
+                logger.warning("cryptography library not installed, skipping signature validation")
                 return True
             except Exception:
                 return False
@@ -108,8 +100,8 @@ def create_app(config: TelnyxConfig) -> FastAPI:
     @app.post("/webhook/recording", response_class=PlainTextResponse)
     async def recording_event(
         request: Request,
-        telnyx_signature_ed25519: Optional[str] = Header(default=None),
-        telnyx_timestamp: Optional[str] = Header(default=None),
+        telnyx_signature_ed25519: str | None = Header(default=None),
+        telnyx_timestamp: str | None = Header(default=None),
     ):
         """Handle Telnyx recording webhook event.
 
@@ -129,18 +121,14 @@ def create_app(config: TelnyxConfig) -> FastAPI:
             event_data = await request.json()
         except Exception as e:
             logger.error(f"Failed to parse JSON body: {e}")
-            raise HTTPException(status_code=400, detail="Invalid JSON")
+            raise HTTPException(status_code=400, detail="Invalid JSON") from None
 
         # Check event type
         data = event_data.get("data", event_data)
         event_type = data.get("event_type", "")
 
         # Only process recording saved events
-        if event_type not in (
-            "call.recording.saved",
-            "call_recording.saved",
-            "recording.saved"
-        ):
+        if event_type not in ("call.recording.saved", "call_recording.saved", "recording.saved"):
             logger.debug(f"Ignoring Telnyx event type: {event_type}")
             return "OK"
 
@@ -152,9 +140,7 @@ def create_app(config: TelnyxConfig) -> FastAPI:
             logger.warning("No recording ID in Telnyx event")
             return "OK"
 
-        logger.info(
-            f"Received Telnyx recording event: recording_id={recording_id}"
-        )
+        logger.info(f"Received Telnyx recording event: recording_id={recording_id}")
 
         # Check if already processed
         if tracker.is_processed(recording_id):
@@ -171,7 +157,7 @@ def create_app(config: TelnyxConfig) -> FastAPI:
                 status="build_failed",
                 call_session_id=recording_data.call_session_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
             return "OK"
 
@@ -185,11 +171,9 @@ def create_app(config: TelnyxConfig) -> FastAPI:
                 status="success",
                 call_session_id=recording_data.call_session_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.info(
-                f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}"
-            )
+            logger.info(f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}")
         else:
             tracker.mark_processed(
                 recording_id,
@@ -197,11 +181,9 @@ def create_app(config: TelnyxConfig) -> FastAPI:
                 status="post_failed",
                 call_session_id=recording_data.call_session_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.error(
-                f"Failed to post vCon {vcon.uuid} for recording {recording_id}"
-            )
+            logger.error(f"Failed to post vCon {vcon.uuid} for recording {recording_id}")
 
         return "OK"
 
@@ -221,7 +203,7 @@ def create_app(config: TelnyxConfig) -> FastAPI:
         return {
             "recording_id": recording_id,
             "vcon_uuid": tracker.get_vcon_uuid(recording_id),
-            "status": tracker.get_processing_status(recording_id)
+            "status": tracker.get_processing_status(recording_id),
         }
 
     return app

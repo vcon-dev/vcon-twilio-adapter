@@ -2,20 +2,20 @@
 
 import base64
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from adapters.twilio.builder import (
     TwilioRecordingData,
+)
+from adapters.twilio.builder import (
     TwilioVconBuilder as VconBuilder,
 )
 from core.base_builder import MIME_TYPES
 
-
 # =============================================================================
 # TwilioRecordingData Tests
 # =============================================================================
+
 
 class TestTwilioRecordingDataBasicParsing:
     """Tests for basic TwilioRecordingData field parsing."""
@@ -32,7 +32,10 @@ class TestTwilioRecordingDataBasicParsing:
         """Recording details are parsed correctly."""
         data = TwilioRecordingData(basic_webhook_data)
 
-        assert data.recording_url == "https://api.twilio.com/2010-04-01/Accounts/ACtest123/Recordings/REtest123"
+        assert (
+            data.recording_url
+            == "https://api.twilio.com/2010-04-01/Accounts/ACtest123/Recordings/REtest123"
+        )
         assert data.recording_status == "completed"
         assert data.recording_duration == "120"
         assert data.recording_channels == "1"
@@ -94,22 +97,26 @@ class TestTwilioRecordingDataCallerCalled:
 
     def test_caller_called_fallback_to_from_to(self):
         """Caller/Called fall back to From/To when not provided."""
-        data = TwilioRecordingData({
-            "From": "+15551111111",
-            "To": "+15552222222",
-        })
+        data = TwilioRecordingData(
+            {
+                "From": "+15551111111",
+                "To": "+15552222222",
+            }
+        )
 
         assert data.caller == "+15551111111"
         assert data.called == "+15552222222"
 
     def test_explicit_caller_called(self):
         """Explicit Caller/Called override From/To."""
-        data = TwilioRecordingData({
-            "From": "+15551111111",
-            "To": "+15552222222",
-            "Caller": "+15553333333",
-            "Called": "+15554444444",
-        })
+        data = TwilioRecordingData(
+            {
+                "From": "+15551111111",
+                "To": "+15552222222",
+                "Caller": "+15553333333",
+                "Called": "+15554444444",
+            }
+        )
 
         assert data.caller == "+15553333333"
         assert data.called == "+15554444444"
@@ -119,12 +126,14 @@ class TestTwilioRecordingDataCallerCalled:
 
     def test_partial_caller_called(self):
         """Partial Caller/Called with From/To fallback."""
-        data = TwilioRecordingData({
-            "From": "+15551111111",
-            "To": "+15552222222",
-            "Caller": "+15553333333",
-            # Called not provided, should use To
-        })
+        data = TwilioRecordingData(
+            {
+                "From": "+15551111111",
+                "To": "+15552222222",
+                "Caller": "+15553333333",
+                # Called not provided, should use To
+            }
+        )
 
         assert data.caller == "+15553333333"
         assert data.called == "+15552222222"
@@ -210,9 +219,7 @@ class TestTwilioRecordingDataStartTime:
 
     def test_valid_rfc2822_timestamp(self):
         """Valid RFC 2822 timestamp is parsed."""
-        data = TwilioRecordingData({
-            "RecordingStartTime": "Tue, 21 Jan 2025 10:30:00 +0000"
-        })
+        data = TwilioRecordingData({"RecordingStartTime": "Tue, 21 Jan 2025 10:30:00 +0000"})
         start = data.start_time
 
         assert start.year == 2025
@@ -229,7 +236,11 @@ class TestTwilioRecordingDataStartTime:
         after = datetime.now(timezone.utc)
 
         # Allow 1 second tolerance for test execution time
-        assert before.replace(microsecond=0) <= start_time.replace(microsecond=0) <= after.replace(microsecond=0)
+        assert (
+            before.replace(microsecond=0)
+            <= start_time.replace(microsecond=0)
+            <= after.replace(microsecond=0)
+        )
 
     def test_invalid_start_time_uses_now(self):
         """Invalid start time falls back to current time."""
@@ -239,13 +250,15 @@ class TestTwilioRecordingDataStartTime:
         after = datetime.now(timezone.utc)
 
         # Allow 1 second tolerance for test execution time
-        assert before.replace(microsecond=0) <= start_time.replace(microsecond=0) <= after.replace(microsecond=0)
+        assert (
+            before.replace(microsecond=0)
+            <= start_time.replace(microsecond=0)
+            <= after.replace(microsecond=0)
+        )
 
     def test_start_time_with_timezone(self):
         """Start time with timezone offset is parsed correctly."""
-        data = TwilioRecordingData({
-            "RecordingStartTime": "Tue, 21 Jan 2025 10:30:00 -0500"
-        })
+        data = TwilioRecordingData({"RecordingStartTime": "Tue, 21 Jan 2025 10:30:00 -0500"})
         start = data.start_time
 
         # Should be in the original timezone
@@ -256,6 +269,7 @@ class TestTwilioRecordingDataStartTime:
 # =============================================================================
 # VconBuilder Tests
 # =============================================================================
+
 
 class TestVconBuilderInit:
     """Tests for VconBuilder initialization."""
@@ -271,9 +285,7 @@ class TestVconBuilderInit:
     def test_custom_init(self):
         """Custom initialization."""
         builder = VconBuilder(
-            download_recordings=False,
-            recording_format="mp3",
-            twilio_auth=("AC123", "token")
+            download_recordings=False, recording_format="mp3", twilio_auth=("AC123", "token")
         )
 
         assert builder.download_recordings is False
@@ -334,11 +346,13 @@ class TestVconBuilderDialogContent:
 
     def test_dialog_duration_missing(self, builder_no_download):
         """Dialog handles missing duration."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         # Duration should be None or not in dialog dict
@@ -360,36 +374,42 @@ class TestVconBuilderOriginator:
 
     def test_originator_inbound_call(self, builder_no_download):
         """Inbound call sets originator to party 1 (external caller)."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-            "Direction": "inbound",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+                "Direction": "inbound",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.dialog[0]["originator"] == 1
 
     def test_originator_outbound_call(self, builder_no_download):
         """Outbound call sets originator to party 0 (us)."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-            "Direction": "outbound",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+                "Direction": "outbound",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.dialog[0]["originator"] == 0
 
     def test_originator_outbound_api(self, builder_no_download):
         """outbound-api direction sets originator to party 0 (we initiated)."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-            "Direction": "outbound-api",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+                "Direction": "outbound-api",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         # outbound-api means we initiated the call via API, so originator is party 0
@@ -397,11 +417,13 @@ class TestVconBuilderOriginator:
 
     def test_originator_missing_direction(self, builder_no_download):
         """Missing direction defaults to party 1."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.dialog[0]["originator"] == 1
@@ -412,35 +434,41 @@ class TestVconBuilderUrlReference:
 
     def test_url_reference_when_not_downloading(self, builder_no_download):
         """URL reference set when not downloading."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.dialog[0]["url"] == "https://api.twilio.com/recording.wav"
 
     def test_url_reference_mp3_format(self, builder_mp3):
         """URL reference uses configured format."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_mp3.build(data)
 
         assert vcon.dialog[0]["url"] == "https://api.twilio.com/recording.mp3"
 
     def test_no_url_when_missing(self, builder_no_download):
         """No URL set when recording URL missing."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         # URL should not be set or be None
@@ -452,14 +480,16 @@ class TestVconBuilderDownload:
 
     def test_download_success_embeds_audio(self, builder_with_auth, sample_audio_bytes):
         """Successful download embeds base64 audio."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.content = sample_audio_bytes
@@ -468,20 +498,22 @@ class TestVconBuilderDownload:
             vcon = builder_with_auth.build(data)
 
             dialog = vcon.dialog[0]
-            assert dialog["body"] == base64.b64encode(sample_audio_bytes).decode('utf-8')
+            assert dialog["body"] == base64.b64encode(sample_audio_bytes).decode("utf-8")
             assert dialog["encoding"] == "base64"
             assert dialog["filename"] == "RE123.wav"
 
     def test_download_failure_falls_back_to_url(self, builder_with_auth):
         """Download failure falls back to URL reference."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 404
             mock_get.return_value = mock_response
@@ -492,14 +524,16 @@ class TestVconBuilderDownload:
 
     def test_download_exception_falls_back_to_url(self, builder_with_auth):
         """Download exception falls back to URL reference."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_get.side_effect = Exception("Connection error")
 
             vcon = builder_with_auth.build(data)
@@ -508,14 +542,16 @@ class TestVconBuilderDownload:
 
     def test_download_uses_auth(self, builder_with_auth):
         """Download uses configured Twilio auth."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.content = b"audio"
@@ -525,18 +561,20 @@ class TestVconBuilderDownload:
 
             mock_get.assert_called_once()
             call_kwargs = mock_get.call_args[1]
-            assert call_kwargs['auth'] == ("AC123", "auth_token")
+            assert call_kwargs["auth"] == ("AC123", "auth_token")
 
     def test_download_url_format(self, builder_with_auth):
         """Download URL includes format extension."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.content = b"audio"
@@ -545,21 +583,21 @@ class TestVconBuilderDownload:
             builder_with_auth.build(data)
 
             mock_get.assert_called_with(
-                "https://api.twilio.com/recording.wav",
-                auth=("AC123", "auth_token"),
-                timeout=60
+                "https://api.twilio.com/recording.wav", auth=("AC123", "auth_token"), timeout=60
             )
 
     def test_download_timeout(self, builder_with_auth):
         """Download has 60 second timeout."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingUrl": "https://api.twilio.com/recording",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingUrl": "https://api.twilio.com/recording",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
 
-        with patch('twilio_adapter.builder.requests.get') as mock_get:
+        with patch("twilio_adapter.builder.requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.content = b"audio"
@@ -568,7 +606,7 @@ class TestVconBuilderDownload:
             builder_with_auth.build(data)
 
             call_kwargs = mock_get.call_args[1]
-            assert call_kwargs['timeout'] == 60
+            assert call_kwargs["timeout"] == 60
 
 
 class TestVconBuilderTags:
@@ -651,11 +689,13 @@ class TestMimeTypes:
     def test_unsupported_format_fallback(self, builder_no_download):
         """Unsupported format falls back to audio/wav."""
         builder = VconBuilder(download_recordings=False, recording_format="unsupported")
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder.build(data)
 
         # Should fall back to wav
@@ -667,11 +707,13 @@ class TestVconBuilderEdgeCases:
 
     def test_empty_phone_numbers(self, builder_no_download):
         """Handles empty phone numbers."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "",
-            "To": "",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "",
+                "To": "",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon is not None
@@ -680,22 +722,26 @@ class TestVconBuilderEdgeCases:
 
     def test_special_characters_in_recording_sid(self, builder_no_download):
         """Handles special characters in recording SID."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE_special-123.test",
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE_special-123.test",
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.get_tag("recording_sid") == "RE_special-123.test"
 
     def test_international_phone_numbers(self, builder_no_download):
         """Handles international phone numbers."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "From": "+442071234567",  # UK number
-            "To": "+81312345678",     # Japan number
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "From": "+442071234567",  # UK number
+                "To": "+81312345678",  # Japan number
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.parties[0]["tel"] == "+442071234567"
@@ -703,12 +749,14 @@ class TestVconBuilderEdgeCases:
 
     def test_very_long_duration(self, builder_no_download):
         """Handles very long duration recordings."""
-        data = TwilioRecordingData({
-            "RecordingSid": "RE123",
-            "RecordingDuration": "86400",  # 24 hours
-            "From": "+15551234567",
-            "To": "+15559876543",
-        })
+        data = TwilioRecordingData(
+            {
+                "RecordingSid": "RE123",
+                "RecordingDuration": "86400",  # 24 hours
+                "From": "+15551234567",
+                "To": "+15559876543",
+            }
+        )
         vcon = builder_no_download.build(data)
 
         assert vcon.dialog[0]["duration"] == 86400.0

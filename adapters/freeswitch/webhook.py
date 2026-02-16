@@ -3,15 +3,15 @@
 import hashlib
 import hmac
 import logging
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException, Header
+
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
-from .builder import FreeSwitchRecordingData, FreeSwitchVconBuilder
-from .config import FreeSwitchConfig
 from core.poster import HttpPoster
 from core.tracker import StateTracker
 
+from .builder import FreeSwitchRecordingData, FreeSwitchVconBuilder
+from .config import FreeSwitchConfig
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
     app = FastAPI(
         title="vCon FreeSWITCH Adapter",
         description="Receives FreeSWITCH recording events and creates vCons",
-        version="0.1.0"
+        version="0.1.0",
     )
 
     # Initialize components
@@ -38,17 +38,10 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
         recordings_path=config.recordings_path,
         recordings_url_base=config.recordings_url_base,
     )
-    poster = HttpPoster(
-        config.conserver_url,
-        config.get_headers(),
-        config.ingress_lists
-    )
+    poster = HttpPoster(config.conserver_url, config.get_headers(), config.ingress_lists)
     tracker = StateTracker(config.state_file)
 
-    def validate_signature(
-        request_body: bytes,
-        signature: Optional[str]
-    ) -> bool:
+    def validate_signature(request_body: bytes, signature: str | None) -> bool:
         """Validate webhook signature.
 
         Args:
@@ -70,9 +63,7 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
 
         # Calculate expected signature
         expected = hmac.new(
-            config.webhook_secret.encode(),
-            request_body,
-            hashlib.sha256
+            config.webhook_secret.encode(), request_body, hashlib.sha256
         ).hexdigest()
 
         return hmac.compare_digest(signature, expected)
@@ -85,7 +76,7 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
     @app.post("/webhook/recording", response_class=PlainTextResponse)
     async def recording_event(
         request: Request,
-        x_freeswitch_signature: Optional[str] = Header(default=None),
+        x_freeswitch_signature: str | None = Header(default=None),
     ):
         """Handle FreeSWITCH recording event webhook.
 
@@ -106,21 +97,16 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
             event_data = await request.json()
         except Exception as e:
             logger.error(f"Failed to parse JSON body: {e}")
-            raise HTTPException(status_code=400, detail="Invalid JSON")
+            raise HTTPException(status_code=400, detail="Invalid JSON") from None
 
         # Extract recording ID
-        recording_id = event_data.get(
-            "uuid",
-            event_data.get("call_uuid", "")
-        )
+        recording_id = event_data.get("uuid", event_data.get("call_uuid", ""))
 
         if not recording_id:
             logger.warning("No recording ID in FreeSWITCH event")
             return "OK"
 
-        logger.info(
-            f"Received FreeSWITCH recording event: uuid={recording_id}"
-        )
+        logger.info(f"Received FreeSWITCH recording event: uuid={recording_id}")
 
         # Check if already processed
         if tracker.is_processed(recording_id):
@@ -139,7 +125,7 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
                 "",
                 status="build_failed",
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
             return "OK"
 
@@ -152,22 +138,18 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
                 vcon.uuid,
                 status="success",
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.info(
-                f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}"
-            )
+            logger.info(f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}")
         else:
             tracker.mark_processed(
                 recording_id,
                 vcon.uuid,
                 status="post_failed",
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.error(
-                f"Failed to post vCon {vcon.uuid} for recording {recording_id}"
-            )
+            logger.error(f"Failed to post vCon {vcon.uuid} for recording {recording_id}")
 
         return "OK"
 
@@ -187,7 +169,7 @@ def create_app(config: FreeSwitchConfig) -> FastAPI:
         return {
             "recording_id": recording_id,
             "vcon_uuid": tracker.get_vcon_uuid(recording_id),
-            "status": tracker.get_processing_status(recording_id)
+            "status": tracker.get_processing_status(recording_id),
         }
 
     return app

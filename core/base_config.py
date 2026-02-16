@@ -1,7 +1,7 @@
 """Base configuration management for telephony adapters."""
 
 import os
-from typing import Dict, List, Optional
+
 from dotenv import load_dotenv
 
 
@@ -11,7 +11,7 @@ class BaseConfig:
     Subclasses should extend this to add platform-specific settings.
     """
 
-    def __init__(self, env_file: Optional[str] = None):
+    def __init__(self, env_file: str | None = None):
         """Load configuration from .env file.
 
         Args:
@@ -33,26 +33,23 @@ class BaseConfig:
 
         # Optional conserver authentication
         self.conserver_api_token = os.getenv("CONSERVER_API_TOKEN")
-        self.conserver_header_name = os.getenv(
-            "CONSERVER_HEADER_NAME",
-            "x-conserver-api-token"
-        )
+        self.conserver_header_name = os.getenv("CONSERVER_HEADER_NAME", "x-conserver-api-token")
 
         # State tracking
         self.state_file = os.getenv("STATE_FILE", ".adapter_state.json")
 
         # Ingress lists for vCon routing
         ingress_lists_str = os.getenv("INGRESS_LISTS", "")
-        self.ingress_lists: List[str] = [
-            item.strip()
-            for item in ingress_lists_str.split(",")
-            if item.strip()
+        self.ingress_lists: list[str] = [
+            item.strip() for item in ingress_lists_str.split(",") if item.strip()
         ]
 
         # Recording download settings
-        self.download_recordings = os.getenv(
-            "DOWNLOAD_RECORDINGS", "true"
-        ).lower() in ("true", "1", "yes")
+        self.download_recordings = os.getenv("DOWNLOAD_RECORDINGS", "true").lower() in (
+            "true",
+            "1",
+            "yes",
+        )
 
         # Recording format preference (wav or mp3)
         self.recording_format = os.getenv("RECORDING_FORMAT", "wav").lower()
@@ -64,7 +61,7 @@ class BaseConfig:
         # Logging level
         self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
-    def get_headers(self) -> Dict[str, str]:
+    def get_headers(self) -> dict[str, str]:
         """Get HTTP headers for conserver requests."""
         headers = {"Content-Type": "application/json"}
         if self.conserver_api_token:

@@ -1,9 +1,11 @@
 """Tests for Bandwidth webhook endpoints."""
 
 import base64
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
 from adapters.bandwidth.config import BandwidthConfig
 from adapters.bandwidth.webhook import create_app
 
@@ -48,8 +50,10 @@ class TestBandwidthWebhook:
 
     def test_recording_event_success(self, config, sample_recording_event):
         """Test successful recording event processing."""
-        with patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -73,8 +77,10 @@ class TestBandwidthWebhook:
 
     def test_recording_event_duplicate(self, config, sample_recording_event):
         """Test duplicate recording event handling."""
-        with patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -129,8 +135,10 @@ class TestBandwidthWebhook:
 
     def test_get_recording_status(self, config, sample_recording_event):
         """Test getting recording status."""
-        with patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -197,8 +205,10 @@ class TestBandwidthWebhookValidation:
 
     def test_webhook_valid_auth(self, config_with_validation):
         """Test webhook with valid authentication."""
-        with patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.bandwidth.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.bandwidth.webhook.BandwidthVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()

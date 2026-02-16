@@ -1,6 +1,7 @@
 """Tests for Asterisk configuration."""
 
 import pytest
+
 from adapters.asterisk.config import AsteriskConfig
 
 

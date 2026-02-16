@@ -1,8 +1,9 @@
 """Tests for Telnyx vCon builder."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+
 from adapters.telnyx.builder import TelnyxRecordingData, TelnyxVconBuilder
 
 
@@ -25,15 +26,15 @@ class TestTelnyxRecordingData:
                     "recording_id": "rec-222",
                     "recording_urls": {
                         "mp3": "https://api.telnyx.com/v2/recordings/rec-222.mp3",
-                        "wav": "https://api.telnyx.com/v2/recordings/rec-222.wav"
+                        "wav": "https://api.telnyx.com/v2/recordings/rec-222.wav",
                     },
                     "channels": "single",
                     "duration_millis": 30000,
                     "from": "+15551234567",
                     "to": "+15559876543",
                     "direction": "incoming",
-                    "start_time": "2024-01-15T10:29:30Z"
-                }
+                    "start_time": "2024-01-15T10:29:30Z",
+                },
             }
         }
 
@@ -46,10 +47,8 @@ class TestTelnyxRecordingData:
             "to": "+15552222222",
             "direction": "outgoing",
             "duration_millis": 45000,
-            "recording_urls": {
-                "wav": "https://api.telnyx.com/v2/recordings/flat.wav"
-            },
-            "start_time": "2024-01-15T11:00:00Z"
+            "recording_urls": {"wav": "https://api.telnyx.com/v2/recordings/flat.wav"},
+            "start_time": "2024-01-15T11:00:00Z",
         }
 
     def test_recording_id(self, sample_webhook_event):
@@ -127,7 +126,7 @@ class TestTelnyxRecordingData:
                     "recording_id": "rec-123",
                     "from": "+15551234567",
                     "to": "+15559876543",
-                }
+                },
             }
         }
         data = TelnyxRecordingData(event)
@@ -161,22 +160,22 @@ class TestTelnyxVconBuilder:
     @pytest.fixture
     def sample_recording_data(self):
         """Create sample recording data."""
-        return TelnyxRecordingData({
-            "data": {
-                "event_type": "call.recording.saved",
-                "payload": {
-                    "recording_id": "rec-123",
-                    "from": "+15551234567",
-                    "to": "+15559876543",
-                    "direction": "incoming",
-                    "duration_millis": 30000,
-                    "recording_urls": {
-                        "wav": "https://api.telnyx.com/recordings/rec-123.wav"
+        return TelnyxRecordingData(
+            {
+                "data": {
+                    "event_type": "call.recording.saved",
+                    "payload": {
+                        "recording_id": "rec-123",
+                        "from": "+15551234567",
+                        "to": "+15559876543",
+                        "direction": "incoming",
+                        "duration_millis": 30000,
+                        "recording_urls": {"wav": "https://api.telnyx.com/recordings/rec-123.wav"},
+                        "start_time": "2024-01-15T10:29:30Z",
                     },
-                    "start_time": "2024-01-15T10:29:30Z"
                 }
             }
-        })
+        )
 
     def test_adapter_source(self, builder):
         """Test adapter source tag."""
@@ -216,15 +215,17 @@ class TestTelnyxVconBuilder:
     @patch("adapters.telnyx.builder.requests.get")
     def test_download_recording_no_url(self, mock_get, builder):
         """Test download fails gracefully with no URL."""
-        recording_data = TelnyxRecordingData({
-            "data": {
-                "payload": {
-                    "recording_id": "rec-123",
-                    "from": "+15551234567",
-                    "to": "+15559876543",
+        recording_data = TelnyxRecordingData(
+            {
+                "data": {
+                    "payload": {
+                        "recording_id": "rec-123",
+                        "from": "+15551234567",
+                        "to": "+15559876543",
+                    }
                 }
             }
-        })
+        )
 
         result = builder._download_recording(recording_data)
 

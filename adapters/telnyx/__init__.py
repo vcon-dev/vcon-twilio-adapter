@@ -1,7 +1,7 @@
 """Telnyx adapter for vCon telephony adapters."""
 
-from .config import TelnyxConfig
 from .builder import TelnyxRecordingData, TelnyxVconBuilder
+from .config import TelnyxConfig
 from .webhook import create_app
 
 __all__ = [

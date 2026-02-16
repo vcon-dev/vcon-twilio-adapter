@@ -1,16 +1,16 @@
 """FastAPI webhook receiver for Twilio recording status callbacks."""
 
 import logging
-from typing import Optional
-from fastapi import FastAPI, Form, Request, HTTPException
+
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from twilio.request_validator import RequestValidator
 
-from .builder import TwilioRecordingData, TwilioVconBuilder
-from .config import TwilioConfig
 from core.poster import HttpPoster
 from core.tracker import StateTracker
 
+from .builder import TwilioRecordingData, TwilioVconBuilder
+from .config import TwilioConfig
 
 logger = logging.getLogger(__name__)
 
@@ -27,20 +27,16 @@ def create_app(config: TwilioConfig) -> FastAPI:
     app = FastAPI(
         title="vCon Twilio Adapter",
         description="Receives Twilio recording webhooks and creates vCons",
-        version="0.1.0"
+        version="0.1.0",
     )
 
     # Initialize components
     builder = TwilioVconBuilder(
         download_recordings=config.download_recordings,
         recording_format=config.recording_format,
-        twilio_auth=config.get_twilio_auth()
+        twilio_auth=config.get_twilio_auth(),
     )
-    poster = HttpPoster(
-        config.conserver_url,
-        config.get_headers(),
-        config.ingress_lists
-    )
+    poster = HttpPoster(config.conserver_url, config.get_headers(), config.ingress_lists)
     tracker = StateTracker(config.state_file)
 
     # Twilio signature validator
@@ -75,7 +71,7 @@ def create_app(config: TwilioConfig) -> FastAPI:
 
         # Get form data for validation
         form_data = await request.form()
-        params = {key: value for key, value in form_data.items()}
+        params = dict(form_data.items())
 
         # Validate the request
         if not validator.validate(url, params, signature):
@@ -97,10 +93,10 @@ def create_app(config: TwilioConfig) -> FastAPI:
         CallSid: str = Form(default=""),
         RecordingUrl: str = Form(default=""),
         RecordingStatus: str = Form(default=""),
-        RecordingDuration: Optional[str] = Form(default=None),
+        RecordingDuration: str | None = Form(default=None),
         RecordingChannels: str = Form(default="1"),
         RecordingSource: str = Form(default=""),
-        RecordingStartTime: Optional[str] = Form(default=None),
+        RecordingStartTime: str | None = Form(default=None),
         From: str = Form(default="", alias="From"),
         To: str = Form(default="", alias="To"),
         Caller: str = Form(default=""),
@@ -108,15 +104,15 @@ def create_app(config: TwilioConfig) -> FastAPI:
         Direction: str = Form(default=""),
         CallStatus: str = Form(default=""),
         ApiVersion: str = Form(default=""),
-        ForwardedFrom: Optional[str] = Form(default=None),
-        CallerCity: Optional[str] = Form(default=None),
-        CallerState: Optional[str] = Form(default=None),
-        CallerZip: Optional[str] = Form(default=None),
-        CallerCountry: Optional[str] = Form(default=None),
-        CalledCity: Optional[str] = Form(default=None),
-        CalledState: Optional[str] = Form(default=None),
-        CalledZip: Optional[str] = Form(default=None),
-        CalledCountry: Optional[str] = Form(default=None),
+        ForwardedFrom: str | None = Form(default=None),
+        CallerCity: str | None = Form(default=None),
+        CallerState: str | None = Form(default=None),
+        CallerZip: str | None = Form(default=None),
+        CallerCountry: str | None = Form(default=None),
+        CalledCity: str | None = Form(default=None),
+        CalledState: str | None = Form(default=None),
+        CalledZip: str | None = Form(default=None),
+        CalledCountry: str | None = Form(default=None),
     ):
         """Handle Twilio recording status callback.
 
@@ -133,9 +129,7 @@ def create_app(config: TwilioConfig) -> FastAPI:
 
         # Only process completed recordings
         if RecordingStatus != "completed":
-            logger.info(
-                f"Ignoring recording {RecordingSid} with status: {RecordingStatus}"
-            )
+            logger.info(f"Ignoring recording {RecordingSid} with status: {RecordingStatus}")
             return "OK"
 
         # Check if already processed
@@ -185,7 +179,7 @@ def create_app(config: TwilioConfig) -> FastAPI:
                 status="build_failed",
                 call_sid=CallSid,
                 from_number=From,
-                to_number=To
+                to_number=To,
             )
             return "OK"
 
@@ -199,11 +193,9 @@ def create_app(config: TwilioConfig) -> FastAPI:
                 status="success",
                 call_sid=CallSid,
                 from_number=From,
-                to_number=To
+                to_number=To,
             )
-            logger.info(
-                f"Successfully processed recording {RecordingSid} -> vCon {vcon.uuid}"
-            )
+            logger.info(f"Successfully processed recording {RecordingSid} -> vCon {vcon.uuid}")
         else:
             tracker.mark_processed(
                 RecordingSid,
@@ -211,11 +203,9 @@ def create_app(config: TwilioConfig) -> FastAPI:
                 status="post_failed",
                 call_sid=CallSid,
                 from_number=From,
-                to_number=To
+                to_number=To,
             )
-            logger.error(
-                f"Failed to post vCon {vcon.uuid} for recording {RecordingSid}"
-            )
+            logger.error(f"Failed to post vCon {vcon.uuid} for recording {RecordingSid}")
 
         # Always return 200 OK to Twilio to prevent retries
         return "OK"
@@ -236,7 +226,7 @@ def create_app(config: TwilioConfig) -> FastAPI:
         return {
             "recording_sid": recording_sid,
             "vcon_uuid": tracker.get_vcon_uuid(recording_sid),
-            "status": tracker.get_processing_status(recording_sid)
+            "status": tracker.get_processing_status(recording_sid),
         }
 
     return app

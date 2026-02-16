@@ -2,13 +2,12 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth
 
 from core.base_builder import BaseRecordingData, BaseVconBuilder
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ class BandwidthRecordingData(BaseRecordingData):
     }
     """
 
-    def __init__(self, event_data: Dict[str, Any]):
+    def __init__(self, event_data: dict[str, Any]):
         """Initialize from Bandwidth webhook event data.
 
         Args:
@@ -84,7 +83,7 @@ class BandwidthRecordingData(BaseRecordingData):
         return self._data.get("fileFormat", "wav")
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Recording duration in seconds.
 
         Bandwidth uses ISO 8601 duration format (e.g., "PT30S").
@@ -97,7 +96,8 @@ class BandwidthRecordingData(BaseRecordingData):
         try:
             # Simple parser for common formats: PT30S, PT1M30S, PT1H30M45S
             import re
-            pattern = r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?'
+
+            pattern = r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?"
             match = re.match(pattern, duration_str)
             if match:
                 hours = float(match.group(1) or 0)
@@ -122,7 +122,7 @@ class BandwidthRecordingData(BaseRecordingData):
         return datetime.now(timezone.utc)
 
     @property
-    def end_time(self) -> Optional[datetime]:
+    def end_time(self) -> datetime | None:
         """Recording end time."""
         end_str = self._data.get("endTime")
         if end_str:
@@ -133,7 +133,7 @@ class BandwidthRecordingData(BaseRecordingData):
         return None
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """Bandwidth-specific metadata tags."""
         tags = {
             "bandwidth_recording_id": self.recording_id,
@@ -166,7 +166,7 @@ class BandwidthVconBuilder(BaseVconBuilder):
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        api_auth: Optional[tuple] = None,
+        api_auth: tuple | None = None,
     ):
         """Initialize Bandwidth vCon builder.
 
@@ -178,10 +178,7 @@ class BandwidthVconBuilder(BaseVconBuilder):
         super().__init__(download_recordings, recording_format)
         self.api_auth = api_auth
 
-    def _download_recording(
-        self,
-        recording_data: BaseRecordingData
-    ) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download recording from Bandwidth.
 
         Args:
@@ -204,16 +201,10 @@ class BandwidthVconBuilder(BaseVconBuilder):
             logger.debug(f"Downloading recording from: {recording_url}")
 
             auth = HTTPBasicAuth(*self.api_auth) if self.api_auth else None
-            response = requests.get(
-                recording_url,
-                auth=auth,
-                timeout=60
-            )
+            response = requests.get(recording_url, auth=auth, timeout=60)
             response.raise_for_status()
             return response.content
 
         except requests.RequestException as e:
-            logger.error(
-                f"Failed to download Bandwidth recording {bw_data.recording_id}: {e}"
-            )
+            logger.error(f"Failed to download Bandwidth recording {bw_data.recording_id}: {e}")
             return None

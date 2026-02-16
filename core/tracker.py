@@ -2,10 +2,8 @@
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Optional
 from datetime import datetime, timezone
-
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +23,14 @@ class StateTracker:
             state_file: Path to JSON file storing state
         """
         self.state_file = Path(state_file)
-        self.state: Dict[str, Dict] = {}
+        self.state: dict[str, dict] = {}
         self._load()
 
     def _load(self):
         """Load state from file."""
         if self.state_file.exists():
             try:
-                with open(self.state_file, 'r') as f:
+                with open(self.state_file) as f:
                     self.state = json.load(f)
                 logger.info(f"Loaded state for {len(self.state)} processed recordings")
             except Exception as e:
@@ -44,7 +42,7 @@ class StateTracker:
     def _save(self):
         """Save state to file."""
         try:
-            with open(self.state_file, 'w') as f:
+            with open(self.state_file, "w") as f:
                 json.dump(self.state, f, indent=2)
         except Exception as e:
             logger.error(f"Error saving state file: {e}")
@@ -61,11 +59,7 @@ class StateTracker:
         return recording_id in self.state
 
     def mark_processed(
-        self,
-        recording_id: str,
-        vcon_uuid: str,
-        status: str = "success",
-        **metadata
+        self, recording_id: str, vcon_uuid: str, status: str = "success", **metadata
     ):
         """Mark recording as processed.
 
@@ -79,14 +73,14 @@ class StateTracker:
             "vcon_uuid": vcon_uuid,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": status,
-            **metadata
+            **metadata,
         }
 
         self.state[recording_id] = entry
         self._save()
         logger.debug(f"Marked recording {recording_id} as processed (status: {status})")
 
-    def get_vcon_uuid(self, recording_id: str) -> Optional[str]:
+    def get_vcon_uuid(self, recording_id: str) -> str | None:
         """Get vCon UUID for a processed recording.
 
         Args:
@@ -98,7 +92,7 @@ class StateTracker:
         entry = self.state.get(recording_id)
         return entry.get("vcon_uuid") if entry else None
 
-    def get_processing_status(self, recording_id: str) -> Optional[str]:
+    def get_processing_status(self, recording_id: str) -> str | None:
         """Get processing status for a recording.
 
         Args:
@@ -110,7 +104,7 @@ class StateTracker:
         entry = self.state.get(recording_id)
         return entry.get("status") if entry else None
 
-    def get_metadata(self, recording_id: str) -> Optional[Dict]:
+    def get_metadata(self, recording_id: str) -> dict | None:
         """Get all metadata for a processed recording.
 
         Args:

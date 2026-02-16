@@ -1,7 +1,7 @@
 """Configuration management for Bandwidth adapter."""
 
 import os
-from typing import Optional
+
 from core.base_config import BaseConfig
 
 
@@ -12,7 +12,7 @@ class BandwidthConfig(BaseConfig):
     API authentication and webhook validation.
     """
 
-    def __init__(self, env_file: Optional[str] = None):
+    def __init__(self, env_file: str | None = None):
         """Load configuration from environment.
 
         Args:
@@ -21,10 +21,7 @@ class BandwidthConfig(BaseConfig):
         super().__init__(env_file)
 
         # State file specific to Bandwidth
-        self.state_file = os.getenv(
-            "STATE_FILE",
-            ".bandwidth_adapter_state.json"
-        )
+        self.state_file = os.getenv("STATE_FILE", ".bandwidth_adapter_state.json")
 
         # Bandwidth API credentials
         self.bandwidth_account_id = os.getenv("BANDWIDTH_ACCOUNT_ID")
@@ -33,8 +30,7 @@ class BandwidthConfig(BaseConfig):
 
         # Bandwidth API URLs
         self.bandwidth_voice_api_url = os.getenv(
-            "BANDWIDTH_VOICE_API_URL",
-            "https://voice.bandwidth.com/api/v2"
+            "BANDWIDTH_VOICE_API_URL", "https://voice.bandwidth.com/api/v2"
         )
 
         # Application ID for voice calls
@@ -45,10 +41,11 @@ class BandwidthConfig(BaseConfig):
         self.webhook_password = os.getenv("BANDWIDTH_WEBHOOK_PASSWORD")
 
         # Whether to validate webhook authentication
-        self.validate_webhook = os.getenv(
-            "VALIDATE_BANDWIDTH_WEBHOOK",
-            "true"
-        ).lower() in ("true", "1", "yes")
+        self.validate_webhook = os.getenv("VALIDATE_BANDWIDTH_WEBHOOK", "true").lower() in (
+            "true",
+            "1",
+            "yes",
+        )
 
     def get_api_auth(self) -> tuple:
         """Get API authentication tuple.

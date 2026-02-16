@@ -10,8 +10,9 @@ Supports running individual adapters via command line argument:
     python main.py             # Default: Run Twilio adapter
 """
 
-import sys
 import logging
+import sys
+
 import uvicorn
 
 
@@ -23,7 +24,7 @@ def setup_logging(level: str = "INFO"):
     """
     logging.basicConfig(
         level=getattr(logging, level.upper(), logging.INFO),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
 
@@ -49,12 +50,7 @@ def run_twilio_adapter():
 
     # Run server
     logger.info(f"Starting server on {config.host}:{config.port}")
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level.lower()
-    )
+    uvicorn.run(app, host=config.host, port=config.port, log_level=config.log_level.lower())
 
 
 def run_freeswitch_adapter():
@@ -80,12 +76,7 @@ def run_freeswitch_adapter():
 
     # Run server
     logger.info(f"Starting server on {config.host}:{config.port}")
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level.lower()
-    )
+    uvicorn.run(app, host=config.host, port=config.port, log_level=config.log_level.lower())
 
 
 def run_asterisk_adapter():
@@ -112,12 +103,7 @@ def run_asterisk_adapter():
 
     # Run server
     logger.info(f"Starting server on {config.host}:{config.port}")
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level.lower()
-    )
+    uvicorn.run(app, host=config.host, port=config.port, log_level=config.log_level.lower())
 
 
 def run_telnyx_adapter():
@@ -143,12 +129,7 @@ def run_telnyx_adapter():
 
     # Run server
     logger.info(f"Starting server on {config.host}:{config.port}")
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level.lower()
-    )
+    uvicorn.run(app, host=config.host, port=config.port, log_level=config.log_level.lower())
 
 
 def run_bandwidth_adapter():
@@ -174,12 +155,7 @@ def run_bandwidth_adapter():
 
     # Run server
     logger.info(f"Starting server on {config.host}:{config.port}")
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level=config.log_level.lower()
-    )
+    uvicorn.run(app, host=config.host, port=config.port, log_level=config.log_level.lower())
 
 
 # Registry of available adapters

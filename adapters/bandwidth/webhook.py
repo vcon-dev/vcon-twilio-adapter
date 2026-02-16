@@ -1,18 +1,17 @@
 """FastAPI webhook receiver for Bandwidth recording events."""
 
-import base64
 import logging
 import secrets
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException, Header, Depends
+
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
-from .builder import BandwidthRecordingData, BandwidthVconBuilder
-from .config import BandwidthConfig
 from core.poster import HttpPoster
 from core.tracker import StateTracker
 
+from .builder import BandwidthRecordingData, BandwidthVconBuilder
+from .config import BandwidthConfig
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ def create_app(config: BandwidthConfig) -> FastAPI:
     app = FastAPI(
         title="vCon Bandwidth Adapter",
         description="Receives Bandwidth recording events and creates vCons",
-        version="0.1.0"
+        version="0.1.0",
     )
 
     # Initialize components
@@ -38,19 +37,13 @@ def create_app(config: BandwidthConfig) -> FastAPI:
         recording_format=config.recording_format,
         api_auth=config.get_api_auth(),
     )
-    poster = HttpPoster(
-        config.conserver_url,
-        config.get_headers(),
-        config.ingress_lists
-    )
+    poster = HttpPoster(config.conserver_url, config.get_headers(), config.ingress_lists)
     tracker = StateTracker(config.state_file)
 
     # HTTP Basic Auth for webhook validation
     security = HTTPBasic(auto_error=False)
 
-    def validate_basic_auth(
-        credentials: Optional[HTTPBasicCredentials]
-    ) -> bool:
+    def validate_basic_auth(credentials: HTTPBasicCredentials | None) -> bool:
         """Validate HTTP Basic authentication.
 
         Args:
@@ -71,12 +64,10 @@ def create_app(config: BandwidthConfig) -> FastAPI:
 
         # Use secrets.compare_digest to prevent timing attacks
         username_correct = secrets.compare_digest(
-            credentials.username.encode("utf-8"),
-            config.webhook_username.encode("utf-8")
+            credentials.username.encode("utf-8"), config.webhook_username.encode("utf-8")
         )
         password_correct = secrets.compare_digest(
-            credentials.password.encode("utf-8"),
-            config.webhook_password.encode("utf-8")
+            credentials.password.encode("utf-8"), config.webhook_password.encode("utf-8")
         )
 
         return username_correct and password_correct
@@ -89,7 +80,7 @@ def create_app(config: BandwidthConfig) -> FastAPI:
     @app.post("/webhook/recording", response_class=PlainTextResponse)
     async def recording_event(
         request: Request,
-        credentials: Optional[HTTPBasicCredentials] = Depends(security),
+        credentials: HTTPBasicCredentials | None = Depends(security),
     ):
         """Handle Bandwidth recording webhook event.
 
@@ -110,17 +101,13 @@ def create_app(config: BandwidthConfig) -> FastAPI:
             event_data = await request.json()
         except Exception as e:
             logger.error(f"Failed to parse JSON body: {e}")
-            raise HTTPException(status_code=400, detail="Invalid JSON")
+            raise HTTPException(status_code=400, detail="Invalid JSON") from None
 
         # Check event type
         event_type = event_data.get("eventType", "")
 
         # Only process recording complete events
-        if event_type not in (
-            "recordingComplete",
-            "recording",
-            "transcriptionAvailable"
-        ):
+        if event_type not in ("recordingComplete", "recording", "transcriptionAvailable"):
             logger.debug(f"Ignoring Bandwidth event type: {event_type}")
             return "OK"
 
@@ -132,8 +119,7 @@ def create_app(config: BandwidthConfig) -> FastAPI:
             return "OK"
 
         logger.info(
-            f"Received Bandwidth recording event: recordingId={recording_id}, "
-            f"type={event_type}"
+            f"Received Bandwidth recording event: recordingId={recording_id}, " f"type={event_type}"
         )
 
         # Check if already processed
@@ -154,7 +140,7 @@ def create_app(config: BandwidthConfig) -> FastAPI:
                 status="build_failed",
                 call_id=recording_data.call_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
             return "OK"
 
@@ -168,11 +154,9 @@ def create_app(config: BandwidthConfig) -> FastAPI:
                 status="success",
                 call_id=recording_data.call_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.info(
-                f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}"
-            )
+            logger.info(f"Successfully processed recording {recording_id} -> vCon {vcon.uuid}")
         else:
             tracker.mark_processed(
                 recording_id,
@@ -180,11 +164,9 @@ def create_app(config: BandwidthConfig) -> FastAPI:
                 status="post_failed",
                 call_id=recording_data.call_id,
                 from_number=recording_data.from_number,
-                to_number=recording_data.to_number
+                to_number=recording_data.to_number,
             )
-            logger.error(
-                f"Failed to post vCon {vcon.uuid} for recording {recording_id}"
-            )
+            logger.error(f"Failed to post vCon {vcon.uuid} for recording {recording_id}")
 
         return "OK"
 
@@ -204,7 +186,7 @@ def create_app(config: BandwidthConfig) -> FastAPI:
         return {
             "recording_id": recording_id,
             "vcon_uuid": tracker.get_vcon_uuid(recording_id),
-            "status": tracker.get_processing_status(recording_id)
+            "status": tracker.get_processing_status(recording_id),
         }
 
     return app

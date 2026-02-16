@@ -15,11 +15,7 @@ Available adapters:
 """
 
 # Import all adapters for convenient access
-from . import twilio
-from . import freeswitch
-from . import asterisk
-from . import telnyx
-from . import bandwidth
+from . import asterisk, bandwidth, freeswitch, telnyx, twilio
 
 __all__ = [
     "twilio",

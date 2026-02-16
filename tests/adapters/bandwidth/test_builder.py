@@ -1,8 +1,9 @@
 """Tests for Bandwidth vCon builder."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+
 from adapters.bandwidth.builder import BandwidthRecordingData, BandwidthVconBuilder
 
 
@@ -28,7 +29,7 @@ class TestBandwidthRecordingData:
             "duration": "PT30S",
             "channels": 1,
             "fileFormat": "wav",
-            "status": "complete"
+            "status": "complete",
         }
 
     def test_recording_id(self, sample_webhook_event):
@@ -133,17 +134,19 @@ class TestBandwidthVconBuilder:
     @pytest.fixture
     def sample_recording_data(self):
         """Create sample recording data."""
-        return BandwidthRecordingData({
-            "eventType": "recordingComplete",
-            "recordingId": "r-rec-123",
-            "callId": "c-call-456",
-            "from": "+15551234567",
-            "to": "+15559876543",
-            "direction": "inbound",
-            "duration": "PT30S",
-            "mediaUrl": "https://voice.bandwidth.com/recordings/r-rec-123/media",
-            "startTime": "2024-01-15T10:29:30.000Z",
-        })
+        return BandwidthRecordingData(
+            {
+                "eventType": "recordingComplete",
+                "recordingId": "r-rec-123",
+                "callId": "c-call-456",
+                "from": "+15551234567",
+                "to": "+15559876543",
+                "direction": "inbound",
+                "duration": "PT30S",
+                "mediaUrl": "https://voice.bandwidth.com/recordings/r-rec-123/media",
+                "startTime": "2024-01-15T10:29:30.000Z",
+            }
+        )
 
     def test_adapter_source(self, builder):
         """Test adapter source tag."""
@@ -182,11 +185,13 @@ class TestBandwidthVconBuilder:
     @patch("adapters.bandwidth.builder.requests.get")
     def test_download_recording_no_url(self, mock_get, builder):
         """Test download fails gracefully with no URL."""
-        recording_data = BandwidthRecordingData({
-            "recordingId": "r-rec-123",
-            "from": "+15551234567",
-            "to": "+15559876543",
-        })
+        recording_data = BandwidthRecordingData(
+            {
+                "recordingId": "r-rec-123",
+                "from": "+15551234567",
+                "to": "+15559876543",
+            }
+        )
 
         result = builder._download_recording(recording_data)
 

@@ -1,8 +1,10 @@
 """Tests for Telnyx webhook endpoints."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
+
 from adapters.telnyx.config import TelnyxConfig
 from adapters.telnyx.webhook import create_app
 
@@ -33,11 +35,9 @@ class TestTelnyxWebhook:
                     "to": "+15559876543",
                     "direction": "incoming",
                     "duration_millis": 30000,
-                    "recording_urls": {
-                        "wav": "https://api.telnyx.com/recordings/rec-abc123.wav"
-                    },
-                    "start_time": "2024-01-15T10:29:30Z"
-                }
+                    "recording_urls": {"wav": "https://api.telnyx.com/recordings/rec-abc123.wav"},
+                    "start_time": "2024-01-15T10:29:30Z",
+                },
             }
         }
 
@@ -53,8 +53,10 @@ class TestTelnyxWebhook:
 
     def test_recording_event_success(self, config, sample_recording_event):
         """Test successful recording event processing."""
-        with patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -78,8 +80,10 @@ class TestTelnyxWebhook:
 
     def test_recording_event_duplicate(self, config, sample_recording_event):
         """Test duplicate recording event handling."""
-        with patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()
@@ -106,10 +110,7 @@ class TestTelnyxWebhook:
         response = client.post(
             "/webhook/recording",
             json={
-                "data": {
-                    "event_type": "call.initiated",
-                    "payload": {"call_control_id": "ctrl-123"}
-                }
+                "data": {"event_type": "call.initiated", "payload": {"call_control_id": "ctrl-123"}}
             },
         )
         assert response.status_code == 200
@@ -128,8 +129,10 @@ class TestTelnyxWebhook:
 
     def test_get_recording_status(self, config, sample_recording_event):
         """Test getting recording status."""
-        with patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class, \
-             patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class:
+        with (
+            patch("adapters.telnyx.webhook.HttpPoster") as mock_poster_class,
+            patch("adapters.telnyx.webhook.TelnyxVconBuilder") as mock_builder_class,
+        ):
             mock_vcon = MagicMock()
             mock_vcon.uuid = "vcon-uuid-123"
             mock_builder = MagicMock()

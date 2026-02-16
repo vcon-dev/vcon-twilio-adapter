@@ -3,13 +3,12 @@
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth
 
 from core.base_builder import BaseRecordingData, BaseVconBuilder
-
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class AsteriskRecordingData(BaseRecordingData):
     - timestamp: Event timestamp
     """
 
-    def __init__(self, event_data: Dict[str, Any]):
+    def __init__(self, event_data: dict[str, Any]):
         """Initialize from Asterisk event data.
 
         Args:
@@ -47,25 +46,20 @@ class AsteriskRecordingData(BaseRecordingData):
     def recording_id(self) -> str:
         """Asterisk recording name/ID."""
         return self._data.get(
-            "recording_name",
-            self._data.get("name", self._data.get("Uniqueid", ""))
+            "recording_name", self._data.get("name", self._data.get("Uniqueid", ""))
         )
 
     @property
     def from_number(self) -> str:
         """Caller's phone number."""
-        return self._data.get(
-            "caller_id_num",
-            self._data.get("CallerIDNum", "")
-        )
+        return self._data.get("caller_id_num", self._data.get("CallerIDNum", ""))
 
     @property
     def to_number(self) -> str:
         """Called phone number."""
         return self._data.get(
             "connected_line_num",
-            self._data.get("ConnectedLineNum",
-                          self._data.get("extension", ""))
+            self._data.get("ConnectedLineNum", self._data.get("extension", "")),
         )
 
     @property
@@ -88,13 +82,10 @@ class AsteriskRecordingData(BaseRecordingData):
     @property
     def recording_url(self) -> str:
         """URL or path to the recording."""
-        return self._data.get(
-            "target_uri",
-            self._data.get("recording_url", "")
-        )
+        return self._data.get("target_uri", self._data.get("recording_url", ""))
 
     @property
-    def recording_file_path(self) -> Optional[str]:
+    def recording_file_path(self) -> str | None:
         """Local file path to the recording."""
         target_uri = self._data.get("target_uri", "")
         if target_uri.startswith("file:"):
@@ -112,7 +103,7 @@ class AsteriskRecordingData(BaseRecordingData):
         return self._data.get("format", "wav")
 
     @property
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Recording duration in seconds."""
         duration = self._data.get("duration")
         if duration is not None:
@@ -144,7 +135,7 @@ class AsteriskRecordingData(BaseRecordingData):
         return datetime.now(timezone.utc)
 
     @property
-    def platform_tags(self) -> Dict[str, str]:
+    def platform_tags(self) -> dict[str, str]:
         """Asterisk-specific metadata tags."""
         tags = {
             "asterisk_recording_name": self.recording_id,
@@ -183,9 +174,9 @@ class AsteriskVconBuilder(BaseVconBuilder):
         self,
         download_recordings: bool = True,
         recording_format: str = "wav",
-        recordings_path: Optional[str] = None,
-        ari_url: Optional[str] = None,
-        ari_auth: Optional[tuple] = None,
+        recordings_path: str | None = None,
+        ari_url: str | None = None,
+        ari_auth: tuple | None = None,
     ):
         """Initialize Asterisk vCon builder.
 
@@ -201,10 +192,7 @@ class AsteriskVconBuilder(BaseVconBuilder):
         self.ari_url = ari_url
         self.ari_auth = ari_auth
 
-    def _download_recording(
-        self,
-        recording_data: BaseRecordingData
-    ) -> Optional[bytes]:
+    def _download_recording(self, recording_data: BaseRecordingData) -> bytes | None:
         """Download or read recording from Asterisk.
 
         Args:
@@ -259,10 +247,8 @@ class AsteriskVconBuilder(BaseVconBuilder):
                 logger.debug(f"Reading recording from file: {file_path}")
                 with open(file_path, "rb") as f:
                     return f.read()
-            except IOError as e:
+            except OSError as e:
                 logger.error(f"Failed to read recording file: {e}")
 
-        logger.error(
-            f"Could not access recording for {ast_data.recording_id}"
-        )
+        logger.error(f"Could not access recording for {ast_data.recording_id}")
         return None

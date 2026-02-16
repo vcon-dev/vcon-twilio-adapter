@@ -1,7 +1,7 @@
 """Twilio adapter for converting recordings to vCon format."""
 
-from .config import TwilioConfig
 from .builder import TwilioRecordingData, TwilioVconBuilder
+from .config import TwilioConfig
 from .webhook import create_app
 
 __all__ = [

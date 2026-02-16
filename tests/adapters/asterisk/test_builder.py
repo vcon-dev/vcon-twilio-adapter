@@ -1,8 +1,10 @@
 """Tests for Asterisk vCon builder."""
 
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from adapters.asterisk.builder import AsteriskRecordingData, AsteriskVconBuilder
 
 
@@ -142,14 +144,16 @@ class TestAsteriskVconBuilder:
     @pytest.fixture
     def sample_recording_data(self):
         """Create sample recording data."""
-        return AsteriskRecordingData({
-            "recording_name": "rec-abc123",
-            "caller_id_num": "+15551234567",
-            "connected_line_num": "+15559876543",
-            "direction": "inbound",
-            "duration": 30,
-            "timestamp": "2024-01-15T10:29:30Z",
-        })
+        return AsteriskRecordingData(
+            {
+                "recording_name": "rec-abc123",
+                "caller_id_num": "+15551234567",
+                "connected_line_num": "+15559876543",
+                "direction": "inbound",
+                "duration": 30,
+                "timestamp": "2024-01-15T10:29:30Z",
+            }
+        )
 
     def test_adapter_source(self, builder):
         """Test adapter source tag."""
@@ -171,12 +175,14 @@ class TestAsteriskVconBuilder:
 
     def test_download_recording_no_url(self, builder):
         """Test download fails gracefully with no URL."""
-        recording_data = AsteriskRecordingData({
-            "recording_name": "rec-abc123",
-            "caller_id_num": "+15551234567",
-            "connected_line_num": "+15559876543",
-            "direction": "inbound",
-        })
+        recording_data = AsteriskRecordingData(
+            {
+                "recording_name": "rec-abc123",
+                "caller_id_num": "+15551234567",
+                "connected_line_num": "+15559876543",
+                "direction": "inbound",
+            }
+        )
 
         result = builder._download_recording(recording_data)
 

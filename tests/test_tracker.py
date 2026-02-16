@@ -6,8 +6,6 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
-
 from core.tracker import StateTracker
 
 
@@ -43,10 +41,10 @@ class TestStateTrackerInit:
             "RE123": {
                 "vcon_uuid": "vcon-123",
                 "timestamp": "2025-01-21T10:00:00+00:00",
-                "status": "success"
+                "status": "success",
             }
         }
-        with open(temp_state_file, 'w') as f:
+        with open(temp_state_file, "w") as f:
             json.dump(existing_state, f)
 
         tracker = StateTracker(temp_state_file)
@@ -100,7 +98,7 @@ class TestStateTrackerMarkProcessed:
             status="success",
             call_sid="CA456",
             from_number="+15551234567",
-            to_number="+15559876543"
+            to_number="+15559876543",
         )
 
         assert tracker.is_processed("RE123")
@@ -133,7 +131,7 @@ class TestStateTrackerMarkProcessed:
         """Call SID is stored when provided."""
         tracker.mark_processed("RE123", "vcon-123", call_sid="CA456")
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         assert data["RE123"]["call_sid"] == "CA456"
@@ -141,12 +139,10 @@ class TestStateTrackerMarkProcessed:
     def test_stores_phone_numbers(self, tracker, temp_state_file):
         """Phone numbers are stored when provided."""
         tracker.mark_processed(
-            "RE123", "vcon-123",
-            from_number="+15551234567",
-            to_number="+15559876543"
+            "RE123", "vcon-123", from_number="+15551234567", to_number="+15559876543"
         )
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         assert data["RE123"]["from_number"] == "+15551234567"
@@ -224,7 +220,7 @@ class TestStateTrackerPersistence:
         """State file contains valid JSON."""
         tracker.mark_processed("RE123", "vcon-123")
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         assert isinstance(data, dict)
@@ -234,7 +230,7 @@ class TestStateTrackerPersistence:
         """State file is human-readable (indented)."""
         tracker.mark_processed("RE123", "vcon-123")
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             content = f.read()
 
         # Should have indentation (newlines after braces)
@@ -249,7 +245,7 @@ class TestStateTrackerErrorHandling:
         fd, path = tempfile.mkstemp(suffix=".json")
         os.close(fd)
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write("not valid json {{{")
 
         try:
@@ -271,7 +267,7 @@ class TestStateTrackerErrorHandling:
         os.close(fd)
 
         # File exists but is empty
-        with open(path, 'w') as f:
+        with open(path, "w"):
             pass
 
         try:
@@ -285,11 +281,11 @@ class TestStateTrackerErrorHandling:
         fd, path = tempfile.mkstemp(suffix=".json")
         os.close(fd)
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             json.dump(["list", "not", "dict"], f)
 
         try:
-            tracker = StateTracker(path)
+            _tracker = StateTracker(path)
             # Should handle gracefully - likely treats as corrupted
             # and starts fresh
         finally:
@@ -339,10 +335,10 @@ class TestStateTrackerStateFileFormat:
             status="success",
             call_sid="CA789",
             from_number="+15551234567",
-            to_number="+15559876543"
+            to_number="+15559876543",
         )
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         entry = data["RE123"]
@@ -357,7 +353,7 @@ class TestStateTrackerStateFileFormat:
         """Minimal entry has required fields."""
         tracker.mark_processed("RE123", "vcon-123")
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         entry = data["RE123"]
@@ -369,7 +365,7 @@ class TestStateTrackerStateFileFormat:
         """Timestamp is in ISO format."""
         tracker.mark_processed("RE123", "vcon-123")
 
-        with open(temp_state_file, 'r') as f:
+        with open(temp_state_file) as f:
             data = json.load(f)
 
         timestamp = data["RE123"]["timestamp"]

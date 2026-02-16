@@ -1,8 +1,10 @@
 """Tests for FreeSWITCH vCon builder."""
 
-import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from adapters.freeswitch.builder import FreeSwitchRecordingData, FreeSwitchVconBuilder
 
 
@@ -90,17 +92,13 @@ class TestFreeSwitchRecordingData:
 
     def test_start_time_microseconds(self):
         """Test start_time with microseconds epoch."""
-        data = FreeSwitchRecordingData({
-            "Caller-Channel-Created-Time": "1705312170000000"
-        })
+        data = FreeSwitchRecordingData({"Caller-Channel-Created-Time": "1705312170000000"})
         expected = datetime.fromtimestamp(1705312170, tz=timezone.utc)
         assert data.start_time == expected
 
     def test_start_time_iso_format(self):
         """Test start_time from ISO format."""
-        data = FreeSwitchRecordingData({
-            "start_time": "2024-01-15T10:29:30Z"
-        })
+        data = FreeSwitchRecordingData({"start_time": "2024-01-15T10:29:30Z"})
         assert data.start_time.year == 2024
         assert data.start_time.month == 1
         assert data.start_time.day == 15
@@ -133,15 +131,17 @@ class TestFreeSwitchVconBuilder:
     @pytest.fixture
     def sample_recording_data(self):
         """Create sample recording data."""
-        return FreeSwitchRecordingData({
-            "uuid": "abc123",
-            "caller_id_number": "+15551234567",
-            "destination_number": "+15559876543",
-            "direction": "inbound",
-            "recording_url": "https://fs.example.com/recordings/abc123.wav",
-            "record_seconds": "30",
-            "start_epoch": "1705312170",
-        })
+        return FreeSwitchRecordingData(
+            {
+                "uuid": "abc123",
+                "caller_id_number": "+15551234567",
+                "destination_number": "+15559876543",
+                "direction": "inbound",
+                "recording_url": "https://fs.example.com/recordings/abc123.wav",
+                "record_seconds": "30",
+                "start_epoch": "1705312170",
+            }
+        )
 
     def test_adapter_source(self, builder):
         """Test adapter source tag."""
@@ -163,9 +163,7 @@ class TestFreeSwitchVconBuilder:
     @patch("builtins.open", create=True)
     @patch("os.path.isabs", return_value=True)
     @patch("adapters.freeswitch.builder.requests.get")
-    def test_download_recording_local_file(
-        self, mock_get, mock_isabs, mock_open, builder
-    ):
+    def test_download_recording_local_file(self, mock_get, mock_isabs, mock_open, builder):
         """Test reading recording from local file."""
         mock_get.side_effect = Exception("Network error")
         mock_file = MagicMock()
@@ -174,13 +172,15 @@ class TestFreeSwitchVconBuilder:
         mock_file.__exit__ = MagicMock(return_value=False)
         mock_open.return_value = mock_file
 
-        recording_data = FreeSwitchRecordingData({
-            "uuid": "abc123",
-            "recording_file": "/var/lib/freeswitch/recordings/abc123.wav",
-            "caller_id_number": "+15551234567",
-            "destination_number": "+15559876543",
-            "direction": "inbound",
-        })
+        recording_data = FreeSwitchRecordingData(
+            {
+                "uuid": "abc123",
+                "recording_file": "/var/lib/freeswitch/recordings/abc123.wav",
+                "caller_id_number": "+15551234567",
+                "destination_number": "+15559876543",
+                "direction": "inbound",
+            }
+        )
 
         result = builder._download_recording(recording_data)
 

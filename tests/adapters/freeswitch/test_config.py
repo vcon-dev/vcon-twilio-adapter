@@ -1,7 +1,7 @@
 """Tests for FreeSWITCH configuration."""
 
-import os
 import pytest
+
 from adapters.freeswitch.config import FreeSwitchConfig
 
 
