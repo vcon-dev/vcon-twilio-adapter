@@ -1,5 +1,9 @@
 # vCon Telephony Adapters
 
+[![PyPI version](https://badge.fury.io/py/vcon-telephony-adapters.svg)](https://pypi.org/project/vcon-telephony-adapters/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A monorepo of webhook-based adapters that convert telephony platform recordings into vCon (Virtual Conversation) format and post them to a vCon conserver.
 
 ## Overview
@@ -39,21 +43,27 @@ vcon-telephony-adapters/
 
 ## Installation
 
-### Prerequisites
+### From PyPI (Recommended)
 
-First, install the vcon library:
+```bash
+pip install vcon-telephony-adapters
+```
+
+You'll also need the vcon library:
 
 ```bash
 pip install git+https://github.com/vcon-dev/vcon-lib.git
 ```
 
-### Using pip
+### From Source
 
 ```bash
+git clone https://github.com/vcon-dev/vcon-telephony-adapters.git
+cd vcon-telephony-adapters
 pip install -e .
 ```
 
-### Development installation
+### Development Installation
 
 ```bash
 pip install -e ".[dev]"
@@ -493,11 +503,10 @@ To add support for a new telephony platform:
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY . .
 
-# Install vcon library
+# Install from PyPI
+RUN pip install vcon-telephony-adapters
 RUN pip install git+https://github.com/vcon-dev/vcon-lib.git
-RUN pip install -e .
 
 EXPOSE 8080
 CMD ["vcon-adapter", "twilio"]
